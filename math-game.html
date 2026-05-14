@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学小乐园</title>
+    <!-- Google Fonts 思源黑体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "HanHei SC", sans-serif;
+            background: linear-gradient(180deg, #fdf6f0 0%, #fef9f3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #4a4a4a;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .title {
+            font-size: 24px;
+            color: #5a5a5a;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .animal-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .animal-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #e8e0d8;
+            background: white;
+            cursor: pointer;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .animal-btn:hover {
+            transform: scale(1.08);
+            border-color: #d4a574;
+        }
+
+        .animal-btn.selected {
+            border-color: #c49a6c;
+            background: #faf5ef;
+        }
+
+        /* ========== 纯CSS动物头像 ========== */
+        .animal-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            position: relative;
+        }
+
+        .animal-icon.panda  { background: #333; }
+        .animal-icon.panda::before { content:''; position:absolute; top:6px; left:7px; width:6px; height:7px; background:white; border-radius:50%; }
+        .animal-icon.panda::after  { content:''; position:absolute; top:6px; right:7px; width:6px; height:7px; background:white; border-radius:50%; }
+
+        .animal-icon.bunny  { background: #f5f0eb; color: #8d8d8d; }
+        .animal-icon.bunny::before { content:''; position:absolute; top:-6px; left:8px; width:5px; height:10px; background:#e0d5cc; border-radius:3px; }
+        .animal-icon.bunny::after  { content:''; position:absolute; top:-6px; right:8px; width:5px; height:10px; background:#e0d5cc; border-radius:3px; }
+
+        .animal-icon.bear   { background: #a1887f; }
+
+        .animal-icon.fox    { background: #ff8a65; }
+        .animal-icon.fox::before { content:''; position:absolute; top:-5px; left:5px; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:8px solid #ff8a65; }
+        .animal-icon.fox::after  { content:''; position:absolute; top:-5px; right:5px; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:8px solid #ff8a65; }
+
+        .animal-icon.koala  { background: #90a4ae; }
+        .animal-icon.koala::before { content:''; position:absolute; top:-3px; left:4px; width:9px; height:9px; background:#b0bec5; border-radius:50% 50% 0 0; }
+        .animal-icon.koala::after  { content:''; position:absolute; top:-3px; right:4px; width:9px; height:9px; background:#b0bec5; border-radius:50% 50% 0 0; }
+
+        /* 大号动物头像 */
+        .animal-icon.large {
+            width: 48px;
+            height: 48px;
+            font-size: 18px;
+        }
+        .animal-icon.large.panda::before  { top:9px; left:11px; width:9px; height:10px; }
+        .animal-icon.large.panda::after   { top:9px; right:11px; width:9px; height:10px; }
+        .animal-icon.large.bunny::before  { top:-8px; left:11px; width:7px; height:14px; border-radius:4px; }
+        .animal-icon.large.bunny::after   { top:-8px; right:11px; width:7px; height:14px; border-radius:4px; }
+        .animal-icon.large.fox::before    { top:-7px; left:7px; border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:10px solid #ff8a65; }
+        .animal-icon.large.fox::after     { top:-7px; right:7px; border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:10px solid #ff8a65; }
+        .animal-icon.large.koala::before  { top:-4px; left:6px; width:12px; height:12px; border-radius:50% 50% 0 0; }
+        .animal-icon.large.koala::after   { top:-4px; right:6px; width:12px; height:12px; border-radius:50% 50% 0 0; }
+
+        .animal-icon.xlarge {
+            width: 64px;
+            height: 64px;
+            font-size: 22px;
+        }
+        .animal-icon.xlarge.panda::before  { top:12px; left:15px; width:10px; height:12px; }
+        .animal-icon.xlarge.panda::after   { top:12px; right:15px; width:10px; height:12px; }
+        .animal-icon.xlarge.bunny::before  { top:-10px; left:14px; width:8px; height:16px; border-radius:5px; }
+        .animal-icon.xlarge.bunny::after   { top:-10px; right:14px; width:8px; height:16px; border-radius:5px; }
+        .animal-icon.xlarge.bear::before   { content:''; position:absolute; top:-4px; left:10px; width:10px; height:8px; background:#8d6e63; border-radius:50%; }
+        .animal-icon.xlarge.bear::after    { content:''; position:absolute; top:-4px; right:10px; width:10px; height:8px; background:#8d6e63; border-radius:50%; }
+        .animal-icon.xlarge.fox::before    { top:-8px; left:9px; border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:12px solid #ff8a65; }
+        .animal-icon.xlarge.fox::after     { top:-8px; right:9px; border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:12px solid #ff8a65; }
+        .animal-icon.xlarge.koala::before  { top:-5px; left:8px; width:14px; height:14px; border-radius:50% 50% 0 0; }
+        .animal-icon.xlarge.koala::after   { top:-5px; right:8px; width:14px; height:14px; border-radius:50% 50% 0 0; }
+
+        .animal-icon.title-size {
+            width: 28px;
+            height: 28px;
+            font-size: 11px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .animal-icon.title-size.panda::before  { top:5px; left:6px; width:5px; height:5px; }
+        .animal-icon.title-size.panda::after   { top:5px; right:6px; width:5px; height:5px; }
+        .animal-icon.title-size.bunny::before  { top:-4px; left:6px; width:4px; height:8px; border-radius:2px; }
+        .animal-icon.title-size.bunny::after   { top:-4px; right:6px; width:4px; height:8px; border-radius:2px; }
+        .animal-icon.title-size.fox::before    { top:-5px; left:4px; border-left:4px solid transparent; border-right:4px solid transparent; border-bottom:7px solid #ff8a65; }
+        .animal-icon.title-size.fox::after     { top:-5px; right:4px; border-left:4px solid transparent; border-right:4px solid transparent; border-bottom:7px solid #ff8a65; }
+        .animal-icon.title-size.koala::before  { top:-2px; left:3px; width:7px; height:7px; border-radius:50% 50% 0 0; }
+        .animal-icon.title-size.koala::after   { top:-2px; right:3px; width:7px; height:7px; border-radius:50% 50% 0 0; }
+
+        .game-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            max-width: 480px;
+            width: 100%;
+        }
+
+        /* 难度进度 */
+        .level-track {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .level-track::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: #e8e0d8;
+            border-radius: 2px;
+        }
+
+        .level-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #e8e0d8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #bbb;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .level-dot.done {
+            background: #e8f5e9;
+            border-color: #81c784;
+            color: #4caf50;
+        }
+
+        .level-dot.current {
+            background: #fff8e1;
+            border-color: #ffb74d;
+            color: #f57c00;
+            transform: scale(1.15);
+            box-shadow: 0 2px 10px rgba(255,183,77,0.3);
+        }
+
+        .level-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding: 0 2px;
+        }
+
+        .level-label {
+            font-size: 9px;
+            color: #bbb;
+            text-align: center;
+            width: 45px;
+            line-height: 1.3;
+        }
+
+        .level-label.current {
+            color: #f57c00;
+            font-weight: bold;
+        }
+
+        /* 题目区 */
+        .problem-box {
+            background: linear-gradient(135deg, #78909c 0%, #607d8b 100%);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .level-tag {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffe0b2;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #e65100;
+        }
+
+        .problem-text {
+            font-size: 42px;
+            color: white;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin: 10px 0;
+        }
+
+        .streak-hint {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* 竖式计算区域 */
+        .vertical-calc {
+            background: #fffde7;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px auto;
+            display: inline-block;
+            border: 2px dashed #ffd54f;
+            min-height: 240px;
+            position: relative;
+        }
+
+        .vertical-calc.hidden { display: none; }
+
+        .v-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #5a5a5a;
+            height: 42px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease-out;
+        }
+
+        .v-row.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .v-row.highlight {
+            color: #e65100;
+            transform: scale(1.05);
+        }
+
+        .v-space { height: 8px; }
+
+        .v-op {
+            font-size: 36px;
+            color: #78909c;
+        }
+
+        .v-num {
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .v-num span {
+            display: inline-block;
+        }
+
+        .v-num .digit {
+            transition: all 0.3s;
+        }
+
+        .v-num .digit.appear {
+            animation: popIn 0.3s ease-out;
+        }
+
+        .v-num .digit.carry {
+            color: #f44336;
+            font-size: 20px;
+            vertical-align: top;
+            margin-top: -5px;
+        }
+
+        .v-num .digit.borrow {
+            color: #f44336;
+            font-size: 20px;
+            vertical-align: top;
+            margin-top: -5px;
+        }
+
+        .v-line {
+            width: 120px;
+            height: 3px;
+            background: #5a5a5a;
+            margin: 0 auto;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .v-line.show { opacity: 1; }
+
+        .v-result {
+            color: #4caf50;
+            font-size: 36px;
+        }
+
+        .v-answer {
+            color: #4caf50;
+            font-size: 42px;
+            font-weight: bold;
+        }
+
+        .v-arrow {
+            position: absolute;
+            font-size: 18px;
+            color: #f44336;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .v-arrow.show { opacity: 1; }
+
+        .v-carry-text {
+            font-size: 14px;
+            color: #f44336;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes highlightRow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); background: rgba(255,213,79,0.3); }
+        }
+
+        .v-row.hightlight-anim {
+            animation: highlightRow 0.5s ease-in-out;
+        }
+
+        /* 讲解区 */
+        .explain-box {
+            background: #fefcf9;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 18px;
+            border: 2px solid #f5efe8;
+            display: none;
+        }
+
+        .explain-box.show { display: block; }
+
+        .explain-title {
+            font-size: 14px;
+            color: #c49a6c;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .explain-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.3s;
+            border: 1px solid #f0ebe3;
+        }
+
+        .explain-step.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .explain-step.active {
+            border-color: #d4a574;
+            background: #faf5ef;
+        }
+
+        .step-num {
+            width: 22px;
+            height: 22px;
+            background: #e8e0d8;
+            color: #8d8d8d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .explain-step.active .step-num {
+            background: #c49a6c;
+            color: white;
+        }
+
+        .step-content {
+            font-size: 14px;
+            color: #5a5a5a;
+            line-height: 1.5;
+        }
+
+        .step-content .n { color: #c49a6c; font-weight: bold; }
+        .step-content .r { color: #81c784; font-weight: bold; }
+
+        /* ========== CSS图标 ========== */
+        .icon-bulb {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: #ffb74d;
+            border-radius: 50% 50% 40% 40%;
+            position: relative;
+            vertical-align: middle;
+        }
+        .icon-bulb::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 4px;
+            background: #ffa726;
+            border-radius: 0 0 3px 3px;
+        }
+
+        .icon-sound {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            position: relative;
+        }
+        .icon-sound::before {
+            content: '';
+            width: 8px;
+            height: 10px;
+            background: #8d8d8d;
+            border-radius: 0 4px 4px 0;
+        }
+        .icon-sound::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border: 2px solid #8d8d8d;
+            border-left: none;
+            border-radius: 0 50% 50% 0;
+            margin-left: -1px;
+        }
+
+        .icon-sound-off {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            position: relative;
+        }
+        .icon-sound-off::before {
+            content: '';
+            width: 8px;
+            height: 10px;
+            background: #ccc;
+            border-radius: 0 4px 4px 0;
+        }
+        .icon-sound-off::after {
+            content: '';
+            width: 14px;
+            height: 2px;
+            background: #e53935;
+            transform: rotate(45deg);
+            position: absolute;
+        }
+
+        .speak-btn {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e8e0d8;
+            border-radius: 10px;
+            background: white;
+            color: #8d8d8d;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .speak-btn:hover {
+            border-color: #c49a6c;
+            color: #c49a6c;
+        }
+
+        /* 输入区 */
+        .input-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .answer-input {
+            width: 120px;
+            height: 52px;
+            font-size: 28px;
+            text-align: center;
+            border: 2px solid #e8e0d8;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .answer-input:focus {
+            border-color: #c49a6c;
+            box-shadow: 0 0 0 3px rgba(196,154,108,0.15);
+        }
+
+        .submit-btn {
+            height: 52px;
+            padding: 0 25px;
+            background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(129,199,132,0.3);
+        }
+
+        /* 操作按钮 */
+        .action-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 9px 18px;
+            border: 2px solid #e8e0d8;
+            border-radius: 20px;
+            background: white;
+            font-size: 13px;
+            color: #8d8d8d;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: #c49a6c;
+            color: #c49a6c;
+        }
+
+        /* 进度条 */
+        .progress-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+
+        .mini-stat {
+            font-size: 12px;
+            color: #bbb;
+        }
+
+        .mini-stat span {
+            color: #c49a6c;
+            font-weight: bold;
+        }
+
+        .mini-bar {
+            flex: 1;
+            height: 6px;
+            background: #f0ebe3;
+            border-radius: 3px;
+            margin: 0 12px;
+            overflow: hidden;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffcc80, #ffb74d);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        /* 反馈弹窗 */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 99;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.85);
+            background: white;
+            padding: 35px;
+            border-radius: 24px;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: all 0.25s;
+        }
+
+        .popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .popup.correct { border: 3px solid #a5d6a7; }
+        .popup.wrong { border: 3px solid #ef9a9a; }
+
+        /* 纯CSS弹窗图标 */
+        .popup-icon {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-star {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-star svg { width: 55px; height: 55px; }
+
+        .icon-check {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-check svg { width: 55px; height: 55px; }
+
+        .icon-circle-ok {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-circle-ok svg { width: 55px; height: 55px; }
+
+        .icon-circle-x {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-circle-x svg { width: 55px; height: 55px; }
+
+        .popup-title {
+            font-size: 20px;
+            color: #5a5a5a;
+            margin-bottom: 6px;
+        }
+
+        .popup-detail {
+            font-size: 13px;
+            color: #999;
+        }
+
+        /* ========== 动物图标（CSS纯色） ========== */
+        .animal-icon {
+            display: inline-block;
+            border-radius: 50%;
+            background: #e0e0e0;
+            vertical-align: middle;
+        }
+        .animal-icon.large {
+            width: 48px; height: 48px; font-size: 24px; line-height: 48px;
+        }
+        .animal-icon:not(.large) {
+            width: 28px; height: 28px; font-size: 14px; line-height: 28px;
+        }
+
+        /* 开始页 */
+        .start-page {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .start-title {
+            font-size: 22px;
+            color: #5a5a5a;
+            margin-bottom: 10px;
+        }
+
+        .start-desc {
+            font-size: 13px;
+            color: #999;
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+
+        .start-btn {
+            display: inline-block;
+            padding: 14px 45px;
+            background: linear-gradient(135deg, #78909c 0%, #607d8b 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(96,125,139,0.3);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 通关页 */
+        .win-page {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .win-title {
+            font-size: 22px;
+            color: #5a5a5a;
+            margin-bottom: 15px;
+        }
+
+        .win-stats {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 20px 0;
+        }
+
+        .win-stat-val {
+            font-size: 28px;
+            font-weight: bold;
+            color: #c49a6c;
+        }
+
+        .win-stat-label {
+            font-size: 11px;
+            color: #bbb;
+        }
+
+        .stars {
+            font-size: 35px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .star-filled {
+            color: #ffc107;
+            font-size: 35px;
+        }
+        .star-empty {
+            color: #e0e0e0;
+            font-size: 35px;
+        }
+
+        /* 语音动画 */
+        .speaking {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
+        .speaking.show { display: flex; }
+
+        .wave-bar {
+            width: 3px;
+            height: 12px;
+            background: #c49a6c;
+            border-radius: 2px;
+            animation: wave 0.8s ease-in-out infinite;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes wave {
+            0%, 100% { height: 5px; }
+            50% { height: 15px; }
+        }
+
+        /* 星星动画 */
+        .star-fly {
+            position: fixed;
+            pointer-events: none;
+            animation: fly 0.8s ease-out forwards;
+            z-index: 200;
+        }
+
+        .star-fly svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        @keyframes fly {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--dx), -80px) scale(0.5); }
+        }
+
+        /* 音效开关 */
+        .sound-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid #e8e0d8;
+            background: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 100;
+            padding: 0;
+        }
+
+        .sound-btn:hover { transform: scale(1.08); }
+        .sound-btn.off { opacity: 0.4; }
+
+        .game-body { display: none; }
+        .game-body.active { display: block; }
+
+        /* 看竖式按钮高亮 */
+        .show-vertical-btn {
+            background: #fff3e0 !important;
+            border-color: #ffb74d !important;
+            color: #e65100 !important;
+        }
+
+        /* 纯CSS铃声按钮内容 */
+        .bell-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+        .bell-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        .bell-icon-off {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+        .bell-icon-off svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 重玩按钮的循环箭头 */
+        .icon-replay {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2.5px solid currentColor;
+            border-radius: 50%;
+            border-top-color: transparent;
+            position: relative;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+        .icon-replay::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: -3px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid currentColor;
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
+        }
+    </style>
+</head>
+<body>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">
+        <span class="bell-icon" id="bellIcon"><svg viewBox="0 0 24 24" fill="none" stroke="#8d8d8d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+    </button>
+
+    <!-- 开始页 -->
+    <div class="start-page" id="startPage">
+        <div class="start-animals" id="startAnimals"></div>
+        <div class="start-title">数学小乐园</div>
+        <div class="start-desc">
+            选择你喜欢的小动物<br>
+            和它一起闯关吧！<br>
+            连续答对5题进入下一关<br>
+            连续答错2题回到上一关
+        </div>
+        <div class="animal-selector" id="animalSelector"></div>
+        <button class="start-btn" id="startBtn">开始闯关 ★</button>
+    </div>
+
+    <!-- 游戏主体 -->
+    <div class="game-body" id="gameBody">
+        <div class="header">
+            <div class="title">和<span id="pet"></span>一起学数学</div>
+            <div class="subtitle">加油哦~</div>
+        </div>
+
+        <div class="game-card">
+            <!-- 难度轨道 -->
+            <div class="level-track" id="levelTrack"></div>
+            <div class="level-labels" id="levelLabels"></div>
+
+            <!-- 进度 -->
+            <div class="progress-row">
+                <div class="mini-stat">答对 <span id="winCount">0</span>/5</div>
+                <div class="mini-bar"><div class="mini-bar-fill" id="winBar" style="width:0%"></div></div>
+                <div class="mini-stat">答错 <span id="loseCount">0</span>/2</div>
+            </div>
+
+            <!-- 题目 -->
+            <div class="problem-box">
+                <div class="level-tag" id="levelTag">第1关 · 十以内加减法</div>
+                <div class="problem-text" id="problemText">5 + 3 = ?</div>
+
+                <!-- 竖式计算区域（level 5显示） -->
+                <div class="vertical-calc hidden" id="verticalCalc">
+                    <!-- 第1行：减数/加数b（动画第0步填入） -->
+                    <div class="v-row" id="vRow0"></div>
+                    <!-- 第2行：被减数/被加数a（动画第1步填入） -->
+                    <div class="v-row" id="vRow1"></div>
+                    <!-- 第3行：横线（动画第2步显示） -->
+                    <div class="v-row" id="vLineRow"><div class="v-line" id="vLine"></div></div>
+                    <!-- 第4行：计算过程（借位标记 or 中间结果）（动画第3步填入） -->
+                    <div class="v-row" id="vResultRow"></div>
+                    <!-- 第5行：最终答案（动画第4步填入） -->
+                    <div class="v-row" id="vAnsRow"></div>
+                </div>
+
+                <div class="streak-hint" id="streakHint">连续答对就能过关~</div>
+            </div>
+
+            <!-- 讲解 -->
+            <div class="explain-box" id="explainBox">
+                <div class="explain-title"><span class="icon-bulb"></span> <span id="explainTitle">解题方法</span></div>
+                <div id="explainSteps"></div>
+                <button class="speak-btn" id="speakBtn" onclick="speakAll()"><span class="icon-sound"></span> 点击听讲解</button>
+                <div class="speaking" id="speaking">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+            </div>
+
+            <!-- 输入 -->
+            <div class="input-row">
+                <input type="text" inputmode="numeric" enterkeyhint="done"
+                       class="answer-input" id="answerInput"
+                       placeholder="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button class="submit-btn" id="submitBtn">回答</button>
+            </div>
+
+            <div class="action-row">
+                <button class="action-btn" id="skipBtn">跳过此题 ▸</button>
+                <button class="action-btn" id="showSolBtn">看方法</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通关页 -->
+    <div class="win-page" id="winPage" style="display:none;">
+        <div id="winEmoji"></div>
+        <div class="win-title">恭喜通关!</div>
+        <div class="stars" id="winStars"></div>
+        <div class="win-stats">
+            <div class="win-stat">
+                <div class="win-stat-val" id="winScore">0</div>
+                <div class="win-stat-label">总分</div>
+            </div>
+            <div class="win-stat">
+                <div class="win-stat-val" id="winRate">0%</div>
+                <div class="win-stat-label">正确率</div>
+            </div>
+        </div>
+        <button class="start-btn" onclick="restartGame()"><span class="icon-replay"></span>再玩一次</button>
+    </div>
+
+    <!-- 反馈弹窗 -->
+    <div class="overlay" id="overlay" onclick="closePopup()"></div>
+    <div class="popup" id="popup">
+        <div class="popup-icon" id="popupIcon"></div>
+        <div class="popup-title" id="popupTitle">正确!</div>
+        <div class="popup-detail" id="popupDetail"></div>
+    </div>
+
+    <script>
+        // ============ 动物定义（纯CSS图标，无emoji） ============
+        const ANIMALS = [
+            { id: 'panda', label: '熊猫', color: '#333', bg: '#f5f5f5', eyes: '● ●' }
+        ];
+
+        // 生成动物CSS图标HTML（纯色圆形带眼睛图案）
+        function animalHTML(animal, size) {
+            const eyes = animal.eyes || '● ●';
+            return `<span style="
+                display:inline-flex; align-items:center; justify-content:center;
+                width:${size==='large'?'52':'30'}px; height:${size==='large'?'52':'30'}px;
+                border-radius:50%; background:${animal.bg}; color:${animal.color};
+                font-size:${size==='large'?'13':'9'}px; font-weight:bold;
+                border:2px solid ${animal.color};
+                box-sizing:border-box; letter-spacing:-1px;
+            ">${eyes}</span>`;
+        }
+
+        // 初始化开始页：只展示一个动物
+        function initAnimals() {
+            const startDiv = document.getElementById('startAnimals');
+            startDiv.innerHTML = animalHTML(ANIMALS[0], 'large');
+
+            const selectorDiv = document.getElementById('animalSelector');
+            selectorDiv.innerHTML = `<div style="text-align:center; font-size:14px; color:#999;">${animalHTML(ANIMALS[0])} 熊猫</div>`;
+        }
+
+        // ============ 状态 ============
+        let pet = ANIMALS[0];
+        let level = 1;
+        let score = 0;
+        let total = 0;
+        let correct = 0;
+        let winStreak = 0;
+        let loseStreak = 0;
+        let problem = null;
+        let soundOn = true;
+        let isSpeaking = false;
+        let steps = [];
+        let verticalSteps = [];
+
+        const LEVEL_NAMES = [
+            '十以内加减法',
+            '十几加减几',
+            '二十以内加减',
+            '整十数加减法',
+            '两位数加减法'
+        ];
+
+        // ============ SVG图标定义 ============
+        const SVG_STAR = '<svg viewBox="0 0 24 24" fill="#ffc107" stroke="#ffb300" stroke-width="0.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+
+        const SVG_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><polyline points="8,12 11,15 16,9"/></svg>';
+
+        const SVG_CIRCLE_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="#81c784" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5"/></svg>';
+
+        const SVG_CIRCLE_X = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10" fill="#ffebee"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
+
+        const SVG_STAR_SMALL = '<svg viewBox="0 0 24 24" width="28" height="28" fill="#ffc107" stroke="#ffb300" stroke-width="0.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+
+        const SVG_STAR_EMPTY = '<svg viewBox="0 0 24 24" width="28" height="28" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="0.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+
+        const SVG_STAR_FLY = '<svg viewBox="0 0 24 24" fill="#ffc107"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+
+        const CORRECT_ICONS = [SVG_STAR, SVG_CHECK, SVG_CIRCLE_OK];
+        const WRONG_ICON = SVG_CIRCLE_X;
+
+        function getPopupIconHTML(isCorrect) {
+            if (isCorrect) {
+                return '<div class="icon-star">' + CORRECT_ICONS[Math.floor(Math.random() * CORRECT_ICONS.length)] + '</div>';
+            } else {
+                return '<div class="icon-circle-x">' + WRONG_ICON + '</div>';
+            }
+        }
+
+        // ============ 音频 ============
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function ding(type) {
+            if (!soundOn) return;
+            initAudio();
+            const t = audioCtx.currentTime;
+            if (type === 'ok') {
+                [[523,0,0.12],[659,0.1,0.15],[784,0.22,0.2]].forEach(([f,delay,dur]) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.type = 'sine';
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.frequency.value = f;
+                    g.gain.setValueAtTime(0, t+delay);
+                    g.gain.linearRampToValueAtTime(0.18, t+delay+0.02);
+                    g.gain.exponentialRampToValueAtTime(0.001, t+delay+dur);
+                    o.start(t+delay); o.stop(t+delay+dur);
+                });
+            } else {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = 'sine';
+                o.connect(g); g.connect(audioCtx.destination);
+                o.frequency.value = 330;
+                o.frequency.linearRampToValueAtTime(280, t+0.2);
+                g.gain.setValueAtTime(0.12, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t+0.25);
+                o.start(t); o.stop(t+0.25);
+            }
+        }
+
+        function toggleSound() {
+            soundOn = !soundOn;
+            const btn = document.getElementById('soundBtn');
+            const icon = document.getElementById('bellIcon');
+            if (soundOn) {
+                icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#8d8d8d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+                btn.classList.remove('off');
+            } else {
+                icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="3" y1="3" x2="21" y2="21" stroke="#e53935" stroke-width="2"/></svg>';
+                btn.classList.add('off');
+            }
+        }
+
+        // ============ 林志玲风格语音 ============
+        function linVoice(text, done) {
+            if (!soundOn) { if(done) done(); return; }
+
+            // 把符号替换成中文文字，避免语音读成"杠"
+            const spoken = text
+                .replace(/\u2212/g, '减')
+                .replace(/-/g, '减')
+                .replace(/\+/g, '加')
+                .replace(/=/g, '等于')
+                .replace(/个/g, '个')
+                .replace(/进一/g, '进一');
+
+            const utt = new SpeechSynthesisUtterance(spoken);
+            utt.lang = 'zh-CN';
+            utt.rate = 0.8;
+            utt.pitch = 1.3;
+            utt.volume = 0.85;
+
+            const voices = speechSynthesis.getVoices();
+            const nice = voices.find(v =>
+                v.lang.includes('zh') && (
+                    v.name.includes('Ting') || v.name.includes('Mei') ||
+                    v.name.includes('Ya') || v.name.includes('Li') ||
+                    v.name.includes('Lin') || v.lang === 'zh-CN' ||
+                    v.name.includes('Female')
+                )
+            ) || voices.find(v => v.lang.includes('zh'));
+
+            if (nice) utt.voice = nice;
+
+            utt.onstart = () => {
+                document.getElementById('speaking').classList.add('show');
+                isSpeaking = true;
+            };
+            utt.onend = utt.onerror = () => {
+                document.getElementById('speaking').classList.remove('show');
+                isSpeaking = false;
+                if (done) done();
+            };
+
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utt);
+        }
+
+        function stopVoice() {
+            speechSynthesis.cancel();
+            document.getElementById('speaking').classList.remove('show');
+            isSpeaking = false;
+        }
+
+        // ============ 题库生成 ============
+        function make(lvl) {
+            let a, b, ans, type, name;
+
+            switch(lvl) {
+                case 1: {
+                    if (Math.random() > 0.5) {
+                        a = rnd(1,9); b = rnd(1, 10-a);
+                        ans = a + b; type = 'add1';
+                        name = '十以内加法';
+                    } else {
+                        a = rnd(2,9); b = rnd(1, a-1);
+                        ans = a - b; type = 'sub1';
+                        name = '十以内减法';
+                    }
+                    break;
+                }
+                case 2: {
+                    if (Math.random() > 0.5) {
+                        a = rnd(11,19); b = rnd(1,9);
+                        ans = a + b; type = 'add2';
+                        name = '十几加几';
+                    } else {
+                        a = rnd(12,19); b = rnd(1, a-10);
+                        ans = a - b; type = 'sub2';
+                        name = '十几减几';
+                    }
+                    break;
+                }
+                case 3: {
+                    if (Math.random() > 0.4) {
+                        a = rnd(11,20); b = rnd(1,9);
+                        ans = a + b; type = 'add3';
+                        name = '二十以内加法';
+                    } else {
+                        a = rnd(13,25); b = rnd(1,9);
+                        if (a <= b) { a += 10; }
+                        ans = a - b; type = 'sub3';
+                        name = '二十以内减法';
+                    }
+                    break;
+                }
+                case 4: {
+                    if (Math.random() > 0.5) {
+                        a = rnd(2,9)*10; b = rnd(1,9)*10;
+                        ans = a + b; type = 'add4';
+                        name = '整十数加法';
+                    } else {
+                        a = rnd(3,9)*10; b = rnd(1, a/10-1)*10;
+                        ans = a - b; type = 'sub4';
+                        name = '整十数减法';
+                    }
+                    break;
+                }
+                case 5: {
+                    if (Math.random() > 0.5) {
+                        a = rnd(25,75); b = rnd(11,35);
+                        ans = a + b; type = 'add5';
+                        name = '两位数加法';
+                    } else {
+                        a = rnd(45,95); b = rnd(15,55);
+                        if (b >= a) { a += 30; }
+                        ans = a - b; type = 'sub5';
+                        name = '两位数减法';
+                    }
+                    break;
+                }
+            }
+
+            return { a, b, ans, type, name };
+        }
+
+        function rnd(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // ============ 竖式步骤生成 ============
+        function genVerticalSteps(p) {
+            const { a, b, ans, type } = p;
+            const a1 = Math.floor(a / 10), a0 = a % 10;
+            const b1 = Math.floor(b / 10), b0 = b % 10;
+            const isAdd = type.startsWith('add');
+
+            const steps = [];
+
+            if (isAdd) {
+                const carry = a0 + b0 >= 10;
+                const sum0 = a0 + b0;
+                const sum1 = a1 + b1 + (carry ? 1 : 0);
+
+                steps.push({
+                    row: 0,
+                    content: `<span class="v-op">+</span><span class="v-num"><span class="digit appear">${b}</span></span>`,
+                    highlight: false,
+                    voice: `${b}`
+                });
+
+                steps.push({
+                    row: 1,
+                    content: `<span style="width:36px"></span><span class="v-num"><span class="digit appear">${a}</span></span>`,
+                    highlight: false,
+                    voice: `${a}`
+                });
+
+                steps.push({
+                    row: 'line',
+                    content: '',
+                    highlight: false,
+                    voice: ''
+                });
+
+                if (carry) {
+                    steps.push({
+                        row: 2,
+                        content: `<span class="v-num"><span class="digit carry appear">1</span><span class="digit">${sum0}</span></span>`,
+                        highlight: true,
+                        voice: `${a0}加${b0}等于${sum0}，满十进一`
+                    });
+                    steps.push({
+                        row: 3,
+                        content: `<span class="v-result appear">${ans}</span>`,
+                        highlight: true,
+                        voice: `${a1}加${b1}再加进位1等于${sum1}，答案是${ans}`
+                    });
+                } else {
+                    steps.push({
+                        row: 2,
+                        content: `<span class="v-num"><span class="digit">${sum0}</span></span>`,
+                        highlight: true,
+                        voice: `${a0}加${b0}等于${sum0}`
+                    });
+                    steps.push({
+                        row: 3,
+                        content: `<span class="v-result appear">${ans}</span>`,
+                        highlight: true,
+                        voice: `${a1}加${b1}等于${sum1}，答案是${ans}`
+                    });
+                }
+            } else {
+                // 减法
+                const borrow = a0 < b0;
+                // 借位后新的个位（被减数个位+10）
+                const borrowed0 = a0 + 10;
+                // 借位后十位（被减数十位-1）
+                const borrowed1 = a1 - 1;
+
+                // 竖式第1步：显示减数b
+                steps.push({
+                    row: 0,
+                    content: `<span class="v-op">\u2212</span><span class="v-num"><span class="digit appear">${b}</span></span>`,
+                    highlight: false,
+                    voice: `${b}`
+                });
+
+                // 竖式第2步：显示被减数a
+                steps.push({
+                    row: 1,
+                    content: `<span style="width:36px"></span><span class="v-num"><span class="digit appear">${a}</span></span>`,
+                    highlight: false,
+                    voice: `${a}`
+                });
+
+                // 竖式第3步：画线
+                steps.push({
+                    row: 'line',
+                    content: '',
+                    highlight: false,
+                    voice: ''
+                });
+
+                if (borrow) {
+                    // 借位竖式共5步：1减数、2被减数、3横线、4借位标记(borrowed0)、5最终答案(ans)
+                    // 第4步：显示借位标记（小圆点表示借位）
+                    steps.push({
+                        row: 2,
+                        content: `<span class="v-num"><span class="digit borrow appear">\u00B7</span><span class="digit">${a0}</span></span>`,
+                        highlight: true,
+                        voice: `${a0}不够减${b0}，从十位借一当十，十位${a1}变成${borrowed1}`
+                    });
+                    // 第5步：最终答案（完整竖式结果）
+                    steps.push({
+                        row: 3,
+                        content: `<span class="v-result appear">${ans}</span>`,
+                        highlight: true,
+                        voice: `个位${borrowed0}减${b0}等于${borrowed0-b0}，十位${borrowed1}减${b1}等于${borrowed1-b1}，答案是${ans}`
+                    });
+                } else {
+                    // 不需要借位：直接个位减个位，十位减十位
+                    steps.push({
+                        row: 2,
+                        content: `<span class="v-num"><span class="digit">${a0-b0}</span></span>`,
+                        highlight: true,
+                        voice: `个位${a0}减${b0}等于${a0-b0}`
+                    });
+                    steps.push({
+                        row: 3,
+                        content: `<span class="v-result appear">${ans}</span>`,
+                        highlight: true,
+                        voice: `十位${a1}减${b1}等于${a1-b1}，答案是${ans}`
+                    });
+                }
+            }
+
+            return steps;
+        }
+
+        // ============ 讲解生成 ============
+        function explain(p) {
+            const steps = [];
+            const { a, b, ans, type } = p;
+
+            switch(type) {
+                case 'add1': {
+                    steps.push({ t: `${a} 加 ${b}`, s: '数一数' });
+                    steps.push({ t: `一共有 <span class="r">${ans}</span> 个`, s: '' });
+                    break;
+                }
+                case 'sub1': {
+                    steps.push({ t: `${a} 减 ${b}`, s: '往后数' });
+                    steps.push({ t: `还剩 <span class="r">${ans}</span> 个`, s: '' });
+                    break;
+                }
+                case 'add2': {
+                    const unit = a % 10;
+                    steps.push({ t: `${a} + ${b}`, s: '个位加个位' });
+                    steps.push({ t: `${unit} + ${b} = ${unit+b}`, s: '十位不变' });
+                    steps.push({ t: `答案 <span class="r">${ans}</span>`, s: '' });
+                    break;
+                }
+                case 'sub2': {
+                    const unit = a % 10;
+                    steps.push({ t: `${a} - ${b}`, s: '个位减个位' });
+                    steps.push({ t: `${unit} - ${b} = <span class="r">${ans}</span>`, s: '' });
+                    break;
+                }
+                case 'add3': {
+                    const u = a % 10;
+                    if (u + b < 10) {
+                        steps.push({ t: `${a} + ${b}`, s: '个位相加' });
+                        steps.push({ t: `${u} + ${b} = ${u+b}，十位不变`, s: '答案 <span class="r">' + ans + '</span>' });
+                    } else {
+                        steps.push({ t: `${a} + ${b}`, s: '个位相加' });
+                        steps.push({ t: `${u} + ${b} = ${u+b}，满十进一`, s: '' });
+                        steps.push({ t: `十位 1 加 1 = 2`, s: '答案 <span class="r">' + ans + '</span>' });
+                    }
+                    break;
+                }
+                case 'sub3': {
+                    const u = a % 10;
+                    if (u >= b) {
+                        steps.push({ t: `${a} - ${b}`, s: '个位够减' });
+                        steps.push({ t: `${u} - ${b} = <span class="r">${ans}</span>`, s: '十位不变' });
+                    } else {
+                        steps.push({ t: `${a} - ${b}`, s: '个位不够减' });
+                        steps.push({ t: `借来1个十，${u}变成${u+10}`, s: `${u+10} - ${b} = <span class="r">${ans}</span>` });
+                    }
+                    break;
+                }
+                case 'add4': {
+                    const t1 = a / 10, t2 = b / 10;
+                    steps.push({ t: `${a} + ${b}`, s: '十位加十位' });
+                    steps.push({ t: `${t1} + ${t2} = ${t1+t2}，后面加0`, s: '答案 <span class="r">' + ans + '</span>' });
+                    break;
+                }
+                case 'sub4': {
+                    const t1 = a / 10, t2 = b / 10;
+                    steps.push({ t: `${a} - ${b}`, s: '十位减十位' });
+                    steps.push({ t: `${t1} - ${t2} = ${t1-t2}，后面加0`, s: '答案 <span class="r">' + ans + '</span>' });
+                    break;
+                }
+                case 'add5': {
+                    const a1 = Math.floor(a/10), a0 = a%10;
+                    const b1 = Math.floor(b/10), b0 = b%10;
+                    const carry = a0 + b0 >= 10;
+                    steps.push({ t: `${a} + ${b}`, s: '列竖式' });
+                    steps.push({ t: `个位：${a0} + ${b0} = ${a0+b0}${carry?'，进一':''}`, s: '' });
+                    steps.push({ t: `十位：${a1} + ${b1}${carry?'+1':''} = ${a1+b1+(carry?1:0)}`, s: '答案 <span class="r">' + ans + '</span>' });
+                    break;
+                }
+                case 'sub5': {
+                    const a1 = Math.floor(a/10), a0 = a%10;
+                    const b1 = Math.floor(b/10), b0 = b%10;
+                    const borrow = a0 < b0;
+                    steps.push({ t: `${a} \u2212 ${b}`, s: '列竖式' });
+                    if (borrow) {
+                        const borrowed1 = a1 - 1;
+                        steps.push({ t: `个位：${a0}不够减${b0}，借一当十`, s: `${a0+10} \u2212 ${b0} = ${a0+10-b0}` });
+                        steps.push({ t: `十位：${borrowed1} \u2212 ${b1} = ${borrowed1-b1}`, s: `答案 <span class="r">${ans}</span>` });
+                    } else {
+                        steps.push({ t: `个位：${a0} \u2212 ${b0} = ${a0-b0}`, s: '' });
+                        steps.push({ t: `十位：${a1} \u2212 ${b1} = ${a1-b1}`, s: `答案 <span class="r">${ans}</span>` });
+                    }
+                    break;
+                }
+            }
+
+            return steps;
+        }
+
+        // ============ UI 渲染 ============
+        function renderTrack() {
+            let track = '';
+            for (let i = 1; i <= 5; i++) {
+                let cls = 'level-dot';
+                if (i < level) cls += ' done';
+                if (i === level) cls += ' current';
+                track += `<div class="${cls}">${i}</div>`;
+            }
+            document.getElementById('levelTrack').innerHTML = track;
+
+            let labels = '';
+            for (let i = 0; i < 5; i++) {
+                const cls = i+1 === level ? 'level-label current' : 'level-label';
+                labels += `<div class="${cls}">${LEVEL_NAMES[i]}</div>`;
+            }
+            document.getElementById('levelLabels').innerHTML = labels;
+        }
+
+        function renderProgress() {
+            document.getElementById('winCount').textContent = winStreak;
+            document.getElementById('loseCount').textContent = loseStreak;
+            document.getElementById('winBar').style.width = (winStreak / 5 * 100) + '%';
+            document.getElementById('levelTag').textContent = `第${level}关 · ${LEVEL_NAMES[level-1]}`;
+        }
+
+        function renderSteps() {
+            const container = document.getElementById('explainSteps');
+            container.innerHTML = steps.map((s, i) =>
+                `<div class="explain-step" id="es${i}">
+                    <div class="step-num">${i+1}</div>
+                    <div class="step-content">${s.t}${s.s ? '<br><small style="color:#aaa;">' + s.s + '</small>' : ''}</div>
+                </div>`
+            ).join('');
+        }
+
+        function showStep(index) {
+            document.querySelectorAll('.explain-step').forEach((el, i) => {
+                el.classList.remove('show', 'active');
+                if (i <= index) el.classList.add('show');
+                if (i === index) el.classList.add('active');
+            });
+        }
+
+        // ============ 竖式动画 ============
+        function resetVertical() {
+            // 停止任何进行中的动画
+            if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
+
+            const vc = document.getElementById('verticalCalc');
+            vc.classList.add('hidden');
+
+            // 清空所有行内容并移除 show 类
+            ['vRow0', 'vRow1', 'vLineRow', 'vResultRow', 'vAnsRow'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = '';
+                    el.classList.remove('show', 'highlight', 'hightlight-anim');
+                }
+            });
+
+            const line = document.getElementById('vLine');
+            if (line) line.classList.remove('show');
+        }
+
+        let _animTimer = null;
+
+        function playVerticalAnimation(auto = false) {
+            const vc = document.getElementById('verticalCalc');
+
+            if (!(level === 5 && (problem.type === 'add5' || problem.type === 'sub5'))) return;
+
+            // 停止之前的动画
+            if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
+
+            // 显示竖式容器
+            vc.classList.remove('hidden');
+
+            // 重新生成步骤
+            verticalSteps = genVerticalSteps(problem);
+
+            if (auto) {
+                let stepIdx = 0;
+
+                function showNextStep() {
+                    if (stepIdx >= verticalSteps.length) return;
+
+                    const step = verticalSteps[stepIdx];
+
+                    if (step.row === 'line') {
+                        const line = document.getElementById('vLine');
+                        if (line) line.classList.add('show');
+                        stepIdx++;
+                        _animTimer = setTimeout(showNextStep, 500);
+                        return;
+                    }
+
+                    // 行映射：0=vRow0(加/减数), 1=vRow1(被加/被减数), 2=vResultRow(过程), 3=vAnsRow(答案)
+                    const rowMap = { 0: 'vRow0', 1: 'vRow1', 2: 'vResultRow', 3: 'vAnsRow' };
+                    const rowEl = document.getElementById(rowMap[step.row]);
+
+                    if (rowEl) {
+                        // 每次写入内容前，先清空再设置（确保 DOM 刷新）
+                        rowEl.innerHTML = '';
+                        requestAnimationFrame(() => {
+                            rowEl.innerHTML = step.content;
+                            rowEl.classList.add('show');
+                            if (step.highlight) {
+                                rowEl.classList.add('highlight', 'hightlight-anim');
+                            }
+
+                            // 念语音（不阻塞动画进行）
+                            if (step.voice && soundOn) {
+                                linVoice(step.voice, null);
+                            }
+                        });
+                    }
+
+                    stepIdx++;
+                    // 每个步骤固定等700ms，不管语音是否播完
+                    _animTimer = setTimeout(showNextStep, 700);
+                }
+
+                // 延迟100ms后开始（等 DOM 渲染好）
+                _animTimer = setTimeout(showNextStep, 100);
+            }
+        }
+
+        // ============ 游戏流程 ============
+        function newProblem() {
+            stopVoice();
+            problem = make(level);
+            steps = explain(problem);
+            verticalSteps = [];
+
+            const op = problem.type.startsWith('sub') ? ' \u2212 ' : ' + ';
+            document.getElementById('problemText').textContent = `${problem.a}${op}${problem.b} = ?`;
+            document.getElementById('explainTitle').textContent = problem.name;
+            document.getElementById('explainBox').classList.remove('show');
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+
+            resetVertical();
+
+            const showSolBtn = document.getElementById('showSolBtn');
+            if (level === 5 && (problem.type === 'add5' || problem.type === 'sub5')) {
+                showSolBtn.textContent = '看竖式 \u25B6';
+            } else {
+                showSolBtn.textContent = '看方法';
+            }
+
+            renderProgress();
+        }
+
+        function submitAnswer() {
+            const val = parseInt(document.getElementById('answerInput').value);
+            if (isNaN(val)) {
+                document.getElementById('answerInput').classList.add('shake');
+                ding('no');
+                setTimeout(() => document.getElementById('answerInput').classList.remove('shake'), 300);
+                return;
+            }
+
+            total++;
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
+
+            if (val === problem.ans) {
+                correct++;
+                winStreak++;
+                loseStreak = 0;
+                score += 10 + winStreak * 2;
+
+                ding('ok');
+                flyStar();
+
+                document.getElementById('popupIcon').innerHTML = getPopupIconHTML(true);
+                document.getElementById('popupTitle').textContent = '正确!';
+                document.getElementById('popupDetail').textContent = `+${10 + winStreak * 2} 分`;
+
+                popup.className = 'popup correct show';
+                overlay.classList.add('show');
+
+                renderProgress();
+
+                if (winStreak >= 5) {
+                    setTimeout(() => {
+                        closePopup();
+                        if (level < 5) {
+                            level++;
+                            winStreak = 0;
+                            linVoice(`${level}关开始！${LEVEL_NAMES[level-1]}，加油！`);
+                            renderTrack();
+                            setTimeout(newProblem, 1500);
+                        } else {
+                            showWin();
+                        }
+                    }, 1200);
+                    return;
+                }
+
+                setTimeout(() => { closePopup(); newProblem(); }, 1000);
+
+            } else {
+                loseStreak++;
+                winStreak = 0;
+
+                ding('no');
+
+                document.getElementById('popupIcon').innerHTML = getPopupIconHTML(false);
+                document.getElementById('popupTitle').textContent = ['再想想~','别急~','加油~'][rnd(0,2)];
+                document.getElementById('popupDetail').textContent = `正确答案 ${problem.ans}`;
+
+                popup.className = 'popup wrong show';
+                overlay.classList.add('show');
+
+                renderProgress();
+
+                if (loseStreak >= 2 && level > 1) {
+                    setTimeout(() => {
+                        closePopup();
+                        level--;
+                        loseStreak = 0;
+                        winStreak = 0;
+                        linVoice(`没关系，回到第${level}关重新开始。`);
+                        renderTrack();
+                        setTimeout(newProblem, 1500);
+                    }, 1200);
+                    return;
+                }
+
+                setTimeout(() => { closePopup(); newProblem(); }, 1200);
+            }
+
+            saveProgress();
+        }
+
+        function closePopup() {
+            document.getElementById('popup').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        function showSolution() {
+            document.getElementById('explainBox').classList.add('show');
+            renderSteps();
+            showStep(0);
+
+            if (level === 5 && (problem.type === 'add5' || problem.type === 'sub5')) {
+                const showSolBtn = document.getElementById('showSolBtn');
+                showSolBtn.classList.add('show-vertical-btn');
+                playVerticalAnimation(true);
+            }
+        }
+
+        function speakAll() {
+            if (isSpeaking) { stopVoice(); return; }
+
+            document.getElementById('explainBox').classList.add('show');
+            renderSteps();
+            showStep(0);
+
+            let i = 0;
+            function next() {
+                if (i >= steps.length) return;
+                showStep(i);
+                linVoice(steps[i].t.replace(/<[^>]+>/g,''), () => {
+                    i++;
+                    setTimeout(next, 300);
+                });
+            }
+            next();
+        }
+
+        function skipProblem() {
+            loseStreak++;
+            winStreak = 0;
+            ding('no');
+            renderProgress();
+
+            if (loseStreak >= 2 && level > 1) {
+                level--;
+                loseStreak = 0;
+                winStreak = 0;
+                linVoice(`没关系，回到第${level}关。`);
+                renderTrack();
+            }
+
+            saveProgress();
+            setTimeout(newProblem, 300);
+        }
+
+        function flyStar() {
+            if (!soundOn) return;
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const s = document.createElement('div');
+                    s.className = 'star-fly';
+                    s.innerHTML = SVG_STAR_FLY;
+                    s.style.cssText = `left:${rnd(25,65)}%;top:40%;--dx:${rnd(-30,30)}px`;
+                    document.body.appendChild(s);
+                    setTimeout(() => s.remove(), 800);
+                }, i * 80);
+            }
+        }
+
+        function showWin() {
+            stopVoice();
+            document.getElementById('gameBody').classList.remove('active');
+            document.getElementById('winPage').style.display = 'block';
+
+            const rate = total > 0 ? Math.round(correct / total * 100) : 0;
+            const stars = rate >= 90 ? 3 : rate >= 70 ? 2 : 1;
+
+            // 渲染星星（SVG）
+            let starsHTML = '';
+            for (let i = 0; i < 3; i++) {
+                starsHTML += i < stars ? SVG_STAR_SMALL : SVG_STAR_EMPTY;
+            }
+            document.getElementById('winStars').innerHTML = starsHTML;
+
+            document.getElementById('winScore').textContent = score;
+            document.getElementById('winRate').textContent = rate + '%';
+
+            // 渲染通关页动物头像
+            document.getElementById('winEmoji').innerHTML =
+                '<div style="margin-bottom:15px;animation:bounce 0.6s infinite alternate;display:flex;justify-content:center;">' +
+                animalHTML(pet, 'large') + '</div>';
+
+            ding('ok');
+            linVoice('太棒了！全部通关！你真是个数学小天才！');
+
+            localStorage.removeItem('mathpet');
+        }
+
+        function startGame() {
+            pet = ANIMALS[0]; // 固定熊猫
+
+            document.getElementById('pet').innerHTML = animalHTML(pet, '');
+
+            document.getElementById('startPage').style.display = 'none';
+            document.getElementById('gameBody').classList.add('active');
+
+            loadProgress();
+            renderTrack();
+
+            // 语音开始后回调 newProblem，但移动端语音可能失败，用 setTimeout兜底
+            let called = false;
+            function safeNext() {
+                if (called) return;
+                called = true;
+                clearTimeout(fallbackTimer);
+                newProblem();
+            }
+            const fallbackTimer = setTimeout(safeNext, 2000); // 2秒兜底
+            linVoice('和' + pet.label + '一起，开始第' + level + '关！', safeNext);
+        }
+
+        function restartGame() {
+            level = 1; score = 0; total = 0; correct = 0;
+            winStreak = 0; loseStreak = 0;
+
+            document.getElementById('winPage').style.display = 'none';
+            document.getElementById('gameBody').classList.add('active');
+
+            renderTrack();
+
+            let called = false;
+            function safeNext() {
+                if (called) return;
+                called = true;
+                clearTimeout(fallbackTimer);
+                newProblem();
+            }
+            const fallbackTimer = setTimeout(safeNext, 2000);
+            linVoice('重新开始！第1关！', safeNext);
+        }
+
+        function pickAnimal(btn) {
+            document.querySelectorAll('.animal-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        // ============ 存档 ============
+        function saveProgress() {
+            localStorage.setItem('mathpet', JSON.stringify({ level, score, correct, total }));
+        }
+
+        function loadProgress() {
+            try {
+                const data = JSON.parse(localStorage.getItem('mathpet'));
+                if (data) {
+                    level = data.level || 1;
+                    score = data.score || 0;
+                    correct = data.correct || 0;
+                    total = data.total || 0;
+                }
+            } catch(e) {}
+        }
+
+        // ============ 初始化 ============
+        document.addEventListener('DOMContentLoaded', function() {
+            initAnimals();
+            document.getElementById('startBtn').addEventListener('click', startGame);
+
+            // 回答按钮：直接绑定 click，兼容所有移动端
+            document.getElementById('submitBtn').addEventListener('click', submitAnswer);
+
+            // 跳过/看方法按钮：统一用 addEventListener，避免和 HTML onclick 冲突
+            document.getElementById('skipBtn').addEventListener('click', skipProblem);
+            document.getElementById('showSolBtn').addEventListener('click', showSolution);
+        });
+
+        // ============ 键盘 ============
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                if (document.getElementById('popup').classList.contains('show')) {
+                    closePopup();
+                } else if (document.getElementById('answerInput').value) {
+                    submitAnswer();
+                }
+            }
+        });
+
+        document.getElementById('answerInput').addEventListener('input', e => {
+            e.target.value = e.target.value.replace(/[^0-9-]/g, '');
+        });
+
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {};
+        }
+    </script>
+</body>
+</html>
