@@ -1061,8 +1061,10 @@
 
             <!-- 输入 -->
             <div class="input-row">
-                <input type="number" class="answer-input" id="answerInput" placeholder="" autocomplete="off">
-                <button class="submit-btn" onclick="submitAnswer()">回答</button>
+                <form id="answerForm" onsubmit="submitAnswer(); return false;" style="display:contents;">
+                    <input type="number" inputmode="numeric" pattern="[0-9]*" class="answer-input" id="answerInput" placeholder="" autocomplete="off">
+                    <button type="submit" class="submit-btn">回答</button>
+                </form>
             </div>
 
             <div class="action-row">
@@ -1622,12 +1624,11 @@
             const vc = document.getElementById('verticalCalc');
             vc.classList.add('hidden');
 
+            // 移除 show/highlight 类，内容自然回到 CSS 初始状态（opacity:0）
             ['vRow0', 'vRow1', 'vLineRow', 'vResultRow', 'vAnsRow'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.classList.remove('show', 'highlight', 'hightlight-anim');
-                    el.style.opacity = '0';
-                    el.style.transform = 'translateY(10px)';
                     el.innerHTML = '';
                 }
             });
@@ -1656,7 +1657,8 @@
                             i++;
                             setTimeout(nextStep, 400);
                         } else {
-                            // 正确映射：0=vRow0, 1=vRow1, 2=vResultRow(过程), 3=vAnsRow(答案)
+                            // 行映射：0=减数/加数(vRow0), 1=被减数/被加数(vRow1),
+                            // 2=过程行(vResultRow), 3=答案行(vAnsRow)
                             const rowMap = { 0: 'vRow0', 1: 'vRow1', 2: 'vResultRow', 3: 'vAnsRow' };
                             const rowEl = document.getElementById(rowMap[step.row]);
                             if (rowEl) {
