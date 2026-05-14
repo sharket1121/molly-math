@@ -1061,10 +1061,10 @@
 
             <!-- 输入 -->
             <div class="input-row">
-                <form id="answerForm" onsubmit="submitAnswer(); return false;" style="display:contents;">
-                    <input type="number" inputmode="numeric" pattern="[0-9]*" class="answer-input" id="answerInput" placeholder="" autocomplete="off">
-                    <button type="submit" class="submit-btn">回答</button>
-                </form>
+                <input type="text" inputmode="numeric" enterkeyhint="done"
+                       class="answer-input" id="answerInput"
+                       placeholder="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button class="submit-btn" id="submitBtn">回答</button>
             </div>
 
             <div class="action-row">
@@ -1621,15 +1621,18 @@
 
         // ============ 竖式动画 ============
         function resetVertical() {
+            // 停止任何进行中的动画
+            if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
+
             const vc = document.getElementById('verticalCalc');
             vc.classList.add('hidden');
 
-            // 移除 show/highlight 类，内容自然回到 CSS 初始状态（opacity:0）
+            // 清空所有行内容并移除 show 类
             ['vRow0', 'vRow1', 'vLineRow', 'vResultRow', 'vAnsRow'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.classList.remove('show', 'highlight', 'hightlight-anim');
                     el.innerHTML = '';
+                    el.classList.remove('show', 'highlight', 'hightlight-anim');
                 }
             });
 
@@ -1637,51 +1640,66 @@
             if (line) line.classList.remove('show');
         }
 
+        let _animTimer = null;
+
         function playVerticalAnimation(auto = false) {
             const vc = document.getElementById('verticalCalc');
 
-            if (level === 5 && (problem.type === 'add5' || problem.type === 'sub5')) {
-                vc.classList.remove('hidden');
-                verticalSteps = genVerticalSteps(problem);
+            if (!(level === 5 && (problem.type === 'add5' || problem.type === 'sub5'))) return;
 
-                if (auto) {
-                    let i = 0;
-                    function nextStep() {
-                        if (i >= verticalSteps.length) return;
+            // 停止之前的动画
+            if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
 
-                        const step = verticalSteps[i];
+            // 显示竖式容器
+            vc.classList.remove('hidden');
 
-                        if (step.row === 'line') {
-                            const line = document.getElementById('vLine');
-                            if (line) line.classList.add('show');
-                            i++;
-                            setTimeout(nextStep, 400);
-                        } else {
-                            // 行映射：0=减数/加数(vRow0), 1=被减数/被加数(vRow1),
-                            // 2=过程行(vResultRow), 3=答案行(vAnsRow)
-                            const rowMap = { 0: 'vRow0', 1: 'vRow1', 2: 'vResultRow', 3: 'vAnsRow' };
-                            const rowEl = document.getElementById(rowMap[step.row]);
-                            if (rowEl) {
-                                rowEl.innerHTML = step.content;
-                                rowEl.classList.add('show');
-                                if (step.highlight) {
-                                    rowEl.classList.add('highlight', 'hightlight-anim');
-                                }
-                            }
+            // 重新生成步骤
+            verticalSteps = genVerticalSteps(problem);
 
-                            if (step.voice) {
-                                linVoice(step.voice, () => {
-                                    i++;
-                                    setTimeout(nextStep, 300);
-                                });
-                            } else {
-                                i++;
-                                setTimeout(nextStep, 500);
-                            }
-                        }
+            if (auto) {
+                let stepIdx = 0;
+
+                function showNextStep() {
+                    if (stepIdx >= verticalSteps.length) return;
+
+                    const step = verticalSteps[stepIdx];
+
+                    if (step.row === 'line') {
+                        const line = document.getElementById('vLine');
+                        if (line) line.classList.add('show');
+                        stepIdx++;
+                        _animTimer = setTimeout(showNextStep, 500);
+                        return;
                     }
-                    nextStep();
+
+                    // 行映射：0=vRow0(加/减数), 1=vRow1(被加/被减数), 2=vResultRow(过程), 3=vAnsRow(答案)
+                    const rowMap = { 0: 'vRow0', 1: 'vRow1', 2: 'vResultRow', 3: 'vAnsRow' };
+                    const rowEl = document.getElementById(rowMap[step.row]);
+
+                    if (rowEl) {
+                        // 每次写入内容前，先清空再设置（确保 DOM 刷新）
+                        rowEl.innerHTML = '';
+                        requestAnimationFrame(() => {
+                            rowEl.innerHTML = step.content;
+                            rowEl.classList.add('show');
+                            if (step.highlight) {
+                                rowEl.classList.add('highlight', 'hightlight-anim');
+                            }
+
+                            // 念语音（不阻塞动画进行）
+                            if (step.voice && soundOn) {
+                                linVoice(step.voice, null);
+                            }
+                        });
+                    }
+
+                    stepIdx++;
+                    // 每个步骤固定等700ms，不管语音是否播完
+                    _animTimer = setTimeout(showNextStep, 700);
                 }
+
+                // 延迟100ms后开始（等 DOM 渲染好）
+                _animTimer = setTimeout(showNextStep, 100);
             }
         }
 
@@ -1941,6 +1959,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             initAnimals();
             document.getElementById('startBtn').addEventListener('click', startGame);
+
+            // 回答按钮：直接绑定 click，兼容所有移动端
+            document.getElementById('submitBtn').addEventListener('click', submitAnswer);
         });
 
         // ============ 键盘 ============
