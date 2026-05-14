@@ -274,7 +274,7 @@
             margin: 15px auto;
             display: inline-block;
             border: 2px dashed #ffd54f;
-            min-height: 160px;
+            min-height: 240px;
             position: relative;
         }
 
@@ -356,6 +356,12 @@
         .v-result {
             color: #4caf50;
             font-size: 36px;
+        }
+
+        .v-answer {
+            color: #4caf50;
+            font-size: 42px;
+            font-weight: bold;
         }
 
         .v-arrow {
@@ -751,17 +757,24 @@
             color: #999;
         }
 
+        /* ========== 动物图标（CSS纯色） ========== */
+        .animal-icon {
+            display: inline-block;
+            border-radius: 50%;
+            background: #e0e0e0;
+            vertical-align: middle;
+        }
+        .animal-icon.large {
+            width: 48px; height: 48px; font-size: 24px; line-height: 48px;
+        }
+        .animal-icon:not(.large) {
+            width: 28px; height: 28px; font-size: 14px; line-height: 28px;
+        }
+
         /* 开始页 */
         .start-page {
             text-align: center;
             padding: 30px 20px;
-        }
-
-        .start-animals {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 15px;
         }
 
         .start-title {
@@ -1018,22 +1031,16 @@
 
                 <!-- 竖式计算区域（level 5显示） -->
                 <div class="vertical-calc hidden" id="verticalCalc">
-                    <div class="v-row" id="vRow1">
-                        <span class="v-op" id="vOp">+</span>
-                        <span class="v-num" id="vNum2"><span class="digit">27</span></span>
-                    </div>
-                    <div class="v-row" id="vRow0">
-                        <span style="width:36px"></span>
-                        <span class="v-num" id="vNum1"><span class="digit">45</span></span>
-                    </div>
-                    <div class="v-row" id="vLineRow">
-                        <div class="v-line" id="vLine"></div>
-                    </div>
-                    <div class="v-row" id="vResultRow">
-                        <span class="v-result" id="vResult">72</span>
-                    </div>
-                    <!-- 进位/借位提示 -->
-                    <div class="v-arrow" id="vCarryHint" style="top: 10px; right: 20px;"></div>
+                    <!-- 第1行：减数/加数b（动画第0步填入） -->
+                    <div class="v-row" id="vRow0"></div>
+                    <!-- 第2行：被减数/被加数a（动画第1步填入） -->
+                    <div class="v-row" id="vRow1"></div>
+                    <!-- 第3行：横线（动画第2步显示） -->
+                    <div class="v-row" id="vLineRow"><div class="v-line" id="vLine"></div></div>
+                    <!-- 第4行：计算过程（借位标记 or 中间结果）（动画第3步填入） -->
+                    <div class="v-row" id="vResultRow"></div>
+                    <!-- 第5行：最终答案（动画第4步填入） -->
+                    <div class="v-row" id="vAnsRow"></div>
                 </div>
 
                 <div class="streak-hint" id="streakHint">连续答对就能过关~</div>
@@ -1054,7 +1061,7 @@
 
             <!-- 输入 -->
             <div class="input-row">
-                <input type="number" class="answer-input" id="answerInput" placeholder="?" autocomplete="off">
+                <input type="number" class="answer-input" id="answerInput" placeholder="" autocomplete="off">
                 <button class="submit-btn" onclick="submitAnswer()">回答</button>
             </div>
 
@@ -1092,29 +1099,31 @@
     </div>
 
     <script>
-        // ============ 动物定义（纯文本，无emoji） ============
+        // ============ 动物定义（纯CSS图标，无emoji） ============
         const ANIMALS = [
-            { id: 'panda',  label: '熊猫', cls: 'panda'  },
-            { id: 'bunny',  label: '小兔', cls: 'bunny'  },
-            { id: 'bear',   label: '小熊', cls: 'bear'   },
-            { id: 'fox',    label: '小狐', cls: 'fox'    },
-            { id: 'koala',  label: '考拉', cls: 'koala'  }
+            { id: 'panda', label: '熊猫', color: '#333', bg: '#f5f5f5', eyes: '● ●' }
         ];
 
-        // 生成动物CSS图标HTML
-        function animalHTML(cls, size) {
-            return `<span class="animal-icon ${cls} ${size || ''}"></span>`;
+        // 生成动物CSS图标HTML（纯色圆形带眼睛图案）
+        function animalHTML(animal, size) {
+            const eyes = animal.eyes || '● ●';
+            return `<span style="
+                display:inline-flex; align-items:center; justify-content:center;
+                width:${size==='large'?'52':'30'}px; height:${size==='large'?'52':'30'}px;
+                border-radius:50%; background:${animal.bg}; color:${animal.color};
+                font-size:${size==='large'?'13':'9'}px; font-weight:bold;
+                border:2px solid ${animal.color};
+                box-sizing:border-box; letter-spacing:-1px;
+            ">${eyes}</span>`;
         }
 
-        // 生成开始页展示动物和选择按钮
+        // 初始化开始页：只展示一个动物
         function initAnimals() {
             const startDiv = document.getElementById('startAnimals');
-            startDiv.innerHTML = ANIMALS.map(a => animalHTML(a.cls, 'large')).join('');
+            startDiv.innerHTML = animalHTML(ANIMALS[0], 'large');
 
             const selectorDiv = document.getElementById('animalSelector');
-            selectorDiv.innerHTML = ANIMALS.map((a, i) =>
-                `<button class="animal-btn ${i===0?'selected':''}" data-id="${a.id}" onclick="pickAnimal(this)">${animalHTML(a.cls)}</button>`
-            ).join('');
+            selectorDiv.innerHTML = `<div style="text-align:center; font-size:14px; color:#999;">${animalHTML(ANIMALS[0])} 熊猫</div>`;
         }
 
         // ============ 状态 ============
@@ -1218,7 +1227,16 @@
         function linVoice(text, done) {
             if (!soundOn) { if(done) done(); return; }
 
-            const utt = new SpeechSynthesisUtterance(text);
+            // 把符号替换成中文文字，避免语音读成"杠"
+            const spoken = text
+                .replace(/\u2212/g, '减')
+                .replace(/-/g, '减')
+                .replace(/\+/g, '加')
+                .replace(/=/g, '等于')
+                .replace(/个/g, '个')
+                .replace(/进一/g, '进一');
+
+            const utt = new SpeechSynthesisUtterance(spoken);
             utt.lang = 'zh-CN';
             utt.rate = 0.8;
             utt.pitch = 1.3;
@@ -1395,10 +1413,14 @@
                     });
                 }
             } else {
+                // 减法
                 const borrow = a0 < b0;
-                let newA0 = a0;
-                if (borrow) newA0 += 10;
+                // 借位后新的个位（被减数个位+10）
+                const borrowed0 = a0 + 10;
+                // 借位后十位（被减数十位-1）
+                const borrowed1 = a1 - 1;
 
+                // 竖式第1步：显示减数b
                 steps.push({
                     row: 0,
                     content: `<span class="v-op">\u2212</span><span class="v-num"><span class="digit appear">${b}</span></span>`,
@@ -1406,6 +1428,7 @@
                     voice: `${b}`
                 });
 
+                // 竖式第2步：显示被减数a
                 steps.push({
                     row: 1,
                     content: `<span style="width:36px"></span><span class="v-num"><span class="digit appear">${a}</span></span>`,
@@ -1413,6 +1436,7 @@
                     voice: `${a}`
                 });
 
+                // 竖式第3步：画线
                 steps.push({
                     row: 'line',
                     content: '',
@@ -1421,30 +1445,34 @@
                 });
 
                 if (borrow) {
+                    // 借位竖式共5步：1减数、2被减数、3横线、4借位标记(borrowed0)、5最终答案(ans)
+                    // 第4步：显示借位标记（小圆点表示借位）
                     steps.push({
                         row: 2,
-                        content: `<span class="v-num"><span class="digit borrow appear">\u00B7</span><span class="digit">${newA0}</span></span>`,
+                        content: `<span class="v-num"><span class="digit borrow appear">\u00B7</span><span class="digit">${a0}</span></span>`,
                         highlight: true,
-                        voice: `${a0}不够减${b0}，从十位借一当十`
+                        voice: `${a0}不够减${b0}，从十位借一当十，十位${a1}变成${borrowed1}`
                     });
+                    // 第5步：最终答案（完整竖式结果）
                     steps.push({
                         row: 3,
                         content: `<span class="v-result appear">${ans}</span>`,
                         highlight: true,
-                        voice: `${newA0}减${b0}等于${newA0 - b0}，答案是${ans}`
+                        voice: `个位${borrowed0}减${b0}等于${borrowed0-b0}，十位${borrowed1}减${b1}等于${borrowed1-b1}，答案是${ans}`
                     });
                 } else {
+                    // 不需要借位：直接个位减个位，十位减十位
                     steps.push({
                         row: 2,
-                        content: `<span class="v-num"><span class="digit">${a0 - b0}</span></span>`,
+                        content: `<span class="v-num"><span class="digit">${a0-b0}</span></span>`,
                         highlight: true,
-                        voice: `${a0}减${b0}等于${a0 - b0}`
+                        voice: `个位${a0}减${b0}等于${a0-b0}`
                     });
                     steps.push({
                         row: 3,
                         content: `<span class="v-result appear">${ans}</span>`,
                         highlight: true,
-                        voice: `${a1}减${b1}等于${a1 - b1}，答案是${ans}`
+                        voice: `十位${a1}减${b1}等于${a1-b1}，答案是${ans}`
                     });
                 }
             }
@@ -1529,13 +1557,14 @@
                     const a1 = Math.floor(a/10), a0 = a%10;
                     const b1 = Math.floor(b/10), b0 = b%10;
                     const borrow = a0 < b0;
-                    steps.push({ t: `${a} - ${b}`, s: '列竖式' });
+                    steps.push({ t: `${a} \u2212 ${b}`, s: '列竖式' });
                     if (borrow) {
-                        steps.push({ t: `个位：${a0}不够减${b0}，借一当十`, s: '' });
-                        steps.push({ t: `${a0+10} - ${b0} = ${a0+10-b0}`, s: `十位：${a1-1} - ${b1} = <span class="r">${ans}</span>` });
+                        const borrowed1 = a1 - 1;
+                        steps.push({ t: `个位：${a0}不够减${b0}，借一当十`, s: `${a0+10} \u2212 ${b0} = ${a0+10-b0}` });
+                        steps.push({ t: `十位：${borrowed1} \u2212 ${b1} = ${borrowed1-b1}`, s: `答案 <span class="r">${ans}</span>` });
                     } else {
-                        steps.push({ t: `个位：${a0} - ${b0} = ${a0-b0}`, s: '' });
-                        steps.push({ t: `十位：${a1} - ${b1} = <span class="r">${ans}</span>`, s: '' });
+                        steps.push({ t: `个位：${a0} \u2212 ${b0} = ${a0-b0}`, s: '' });
+                        steps.push({ t: `十位：${a1} \u2212 ${b1} = ${a1-b1}`, s: `答案 <span class="r">${ans}</span>` });
                     }
                     break;
                 }
@@ -1593,22 +1622,18 @@
             const vc = document.getElementById('verticalCalc');
             vc.classList.add('hidden');
 
-            ['vRow0', 'vRow1', 'vLineRow', 'vResultRow'].forEach(id => {
+            ['vRow0', 'vRow1', 'vLineRow', 'vResultRow', 'vAnsRow'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.classList.remove('show', 'highlight', 'hightlight-anim');
                     el.style.opacity = '0';
                     el.style.transform = 'translateY(10px)';
+                    el.innerHTML = '';
                 }
             });
 
             const line = document.getElementById('vLine');
             if (line) line.classList.remove('show');
-
-            ['vRow0', 'vRow1', 'vResultRow'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = '';
-            });
         }
 
         function playVerticalAnimation(auto = false) {
@@ -1631,7 +1656,9 @@
                             i++;
                             setTimeout(nextStep, 400);
                         } else {
-                            const rowEl = document.getElementById(step.row === 0 ? 'vRow0' : step.row === 1 ? 'vRow1' : step.row === 2 ? 'vRow0' : 'vResultRow');
+                            // 正确映射：0=vRow0, 1=vRow1, 2=vResultRow(过程), 3=vAnsRow(答案)
+                            const rowMap = { 0: 'vRow0', 1: 'vRow1', 2: 'vResultRow', 3: 'vAnsRow' };
+                            const rowEl = document.getElementById(rowMap[step.row]);
                             if (rowEl) {
                                 rowEl.innerHTML = step.content;
                                 rowEl.classList.add('show');
@@ -1854,7 +1881,7 @@
             // 渲染通关页动物头像
             document.getElementById('winEmoji').innerHTML =
                 '<div style="margin-bottom:15px;animation:bounce 0.6s infinite alternate;display:flex;justify-content:center;">' +
-                animalHTML(pet.cls, 'xlarge') + '</div>';
+                animalHTML(pet, 'large') + '</div>';
 
             ding('ok');
             linVoice('太棒了！全部通关！你真是个数学小天才！');
@@ -1863,11 +1890,9 @@
         }
 
         function startGame() {
-            const selectedBtn = document.querySelector('.animal-btn.selected');
-            const animalId = selectedBtn ? selectedBtn.dataset.id : ANIMALS[0].id;
-            pet = ANIMALS.find(a => a.id === animalId) || ANIMALS[0];
+            pet = ANIMALS[0]; // 固定熊猫
 
-            document.getElementById('pet').innerHTML = animalHTML(pet.cls, 'title-size');
+            document.getElementById('pet').innerHTML = animalHTML(pet, '');
 
             document.getElementById('startPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
