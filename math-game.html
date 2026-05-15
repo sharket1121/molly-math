@@ -1457,7 +1457,7 @@
                 // 第1行：被加数 a（在上，不带符号，右对齐）
                 steps.push({
                     row: 0,
-                    content: `<span class="v-num"><span class="digit appear">${a}</span></span>`,
+                    content: `${alignTop(a)}<span class="v-num"><span class="digit appear">${a}</span></span>`,
                     highlight: false,
                     voice: `${a}`
                 });
@@ -1525,7 +1525,7 @@
                 // 第1行：被减数 a（不带符号，右对齐）
                 steps.push({
                     row: 0,
-                    content: `<span class="v-num"><span class="digit appear">${a}</span></span>`,
+                    content: `${alignTop(a)}<span class="v-num"><span class="digit appear">${a}</span></span>`,
                     highlight: false,
                     voice: `${a}`
                 });
