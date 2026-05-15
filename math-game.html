@@ -988,7 +988,7 @@
     </style>
 </head>
 <body>
-    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">
+    <button class="sound-btn" id="soundBtn">
         <span class="bell-icon" id="bellIcon"><svg viewBox="0 0 24 24" fill="none" stroke="#8d8d8d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
     </button>
 
@@ -1976,88 +1976,84 @@
         }
 
         // ============ 事件绑定（统一用函数，微信 WKWebView 兼容性核心） ============
+        // ============ 事件绑定（微信 WKWebView 兼容性核心） ============
         function bindEvents() {
-            // 微信浏览器：先初始化 AudioContext（必须在用户手势内调用）
-            function initAudioOnTouch() {
-                initAudio();
-                document.removeEventListener('touchstart', initAudioOnTouch, { passive: true });
-            }
-            document.addEventListener('touchstart', initAudioOnTouch, { passive: true });
+            // 检测是否为触摸设备（微信/移动端）
+            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            const startEvent = isTouchDevice ? 'touchstart' : 'click';
+            const endEvent   = isTouchDevice ? 'touchend'   : 'click';
 
-            // 开始按钮：支持 touch + click，微信 WKWebView 必须用 touchstart
-            const startBtn = document.getElementById('startBtn');
-            function handleStart(e) {
-                e.preventDefault();
-                startBtn.classList.add('touch-active');
-                setTimeout(() => startBtn.classList.remove('touch-active'), 150);
-                startGame();
+            // 统一按钮处理器：触摸设备用 touchstart，非触摸用 click
+            function makeHandler(fn) {
+                return function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fn();
+                };
             }
-            startBtn.addEventListener('touchstart', handleStart, { passive: false });
-            startBtn.addEventListener('click', handleStart);
+
+            // 触摸设备上：首次触摸激活 AudioContext（必须在用户手势内调用）
+            if (isTouchDevice) {
+                document.addEventListener('touchstart', function initAudioOnce() {
+                    initAudio();
+                    document.removeEventListener('touchstart', initAudioOnce, { passive: true });
+                }, { passive: true });
+            }
+
+            // 开始按钮
+            const startBtn = document.getElementById('startBtn');
+            startBtn.addEventListener(startEvent, makeHandler(function() {
+                startBtn.classList.add('touch-active');
+                setTimeout(function() { startBtn.classList.remove('touch-active'); }, 150);
+                startGame();
+            }), { passive: false });
 
             // 回答按钮
-            const submitBtn = document.getElementById('submitBtn');
-            function handleSubmit(e) {
-                e.preventDefault();
-                submitAnswer();
-            }
-            submitBtn.addEventListener('touchstart', handleSubmit, { passive: false });
-            submitBtn.addEventListener('click', handleSubmit);
+            document.getElementById('submitBtn').addEventListener(startEvent, makeHandler(submitAnswer), { passive: false });
 
             // 跳过按钮
-            const skipBtn = document.getElementById('skipBtn');
-            function handleSkip(e) { e.preventDefault(); skipProblem(); }
-            skipBtn.addEventListener('touchstart', handleSkip, { passive: false });
-            skipBtn.addEventListener('click', handleSkip);
+            document.getElementById('skipBtn').addEventListener(startEvent, makeHandler(skipProblem), { passive: false });
 
             // 看方法按钮
-            const showSolBtn = document.getElementById('showSolBtn');
-            function handleShowSol(e) { e.preventDefault(); showSolution(); }
-            showSolBtn.addEventListener('touchstart', handleShowSol, { passive: false });
-            showSolBtn.addEventListener('click', handleShowSol);
+            document.getElementById('showSolBtn').addEventListener(startEvent, makeHandler(showSolution), { passive: false });
 
             // 通关页再来一次
-            const restartBtn = document.getElementById('restartBtn');
+            var restartBtn = document.getElementById('restartBtn');
             if (restartBtn) {
-                function handleRestart(e) { e.preventDefault(); restartBtn.classList.add('touch-active'); setTimeout(() => restartBtn.classList.remove('touch-active'), 150); restartGame(); }
-                restartBtn.addEventListener('touchstart', handleRestart, { passive: false });
-                restartBtn.addEventListener('click', handleRestart);
+                restartBtn.addEventListener(startEvent, makeHandler(function() {
+                    restartBtn.classList.add('touch-active');
+                    setTimeout(function() { restartBtn.classList.remove('touch-active'); }, 150);
+                    restartGame();
+                }), { passive: false });
             }
 
-            // 音效开关
-            const soundBtn = document.getElementById('soundBtn');
-            soundBtn.addEventListener('click', toggleSound);
-            soundBtn.addEventListener('touchstart', function(e) { e.stopPropagation(); }, { passive: true });
-
-            // 讲解按钮
-            const speakBtnEl = document.getElementById('speakBtn2');
-            if (speakBtnEl) {
-                function handleSpeak(e) { e.preventDefault(); speakAll(); }
-                speakBtnEl.addEventListener('touchstart', handleSpeak, { passive: false });
-                speakBtnEl.addEventListener('click', handleSpeak);
+            // 讲解按钮（先隐藏，等用户点击"看方法"后再绑定或显示）
+            var speakBtn2 = document.getElementById('speakBtn2');
+            if (speakBtn2) {
+                speakBtn2.addEventListener(startEvent, makeHandler(speakAll), { passive: false });
             }
+
+            // 音效开关（始终监听 click，阻止冒泡避免误触）
+            var soundBtn = document.getElementById('soundBtn');
+            soundBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleSound(); });
 
             // 点击遮罩关闭弹窗
-            const overlay = document.getElementById('overlay');
-            if (overlay) {
-                function handleOverlay(e) { e.preventDefault(); closePopup(); }
-                overlay.addEventListener('touchstart', handleOverlay, { passive: false });
-                overlay.addEventListener('click', handleOverlay);
-            }
+            var overlay = document.getElementById('overlay');
+            overlay.addEventListener(startEvent, makeHandler(closePopup), { passive: false });
+            overlay.addEventListener('click', function(e) { e.stopPropagation(); });
 
-            // 输入框：回车键提交（微信键盘兼容性）
-            const answerInput = document.getElementById('answerInput');
-            if (answerInput) {
-                function handleInputKey(e) {
-                    if (e.key === 'Enter' || e.keyCode === 13) {
-                        e.preventDefault();
-                        submitAnswer();
-                    }
+            // 输入框：回车键提交（触摸设备额外自动聚焦）
+            var answerInput = document.getElementById('answerInput');
+            function handleInputKey(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    submitAnswer();
                 }
-                answerInput.addEventListener('keydown', handleInputKey);
-                // 微信 WKWebView 触摸自动聚焦输入框
+            }
+            answerInput.addEventListener('keydown', handleInputKey);
+            if (isTouchDevice) {
                 answerInput.addEventListener('touchstart', function(e) {
-                    setTimeout(function() { answerInput.focus(); }, 50);
+                    setTimeout(function() { answerInput.focus(); }, 10);
                 }, { passive: true });
             }
         }
@@ -2077,15 +2073,27 @@
             e.target.value = e.target.value.replace(/[^0-9-]/g, '');
         });
 
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = () => {};
-        }
+        // 预加载语音（兼容微信等需要预加载语音的场景）
+        try { speechSynthesis.getVoices(); } catch(e) {}
 
-        // ============ 立即初始化（微信 WKWebView 兼容性：DOMContentLoaded 可能不触发） ============
+        // ============ 立即初始化（微信 WKWebView 兼容性 + DOMContentLoaded 双保险） ============
         (function initOnLoad() {
-            initAnimals();
-            bindEvents();
+            try {
+                initAnimals();
+                bindEvents();
+            } catch(e) {
+                console.error('初始化错误:', e);
+                alert('游戏加载失败，请刷新重试');
+            }
         })();
+
+        // 备用：如果 IIFE 执行时 DOM 未就绪（比如某些极端情况），DOMContentLoaded 再尝试
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                initAnimals();
+                bindEvents();
+            } catch(e) { console.error('DOMContentLoaded 初始化错误:', e); }
+        });
     </script>
 </body>
 </html>
