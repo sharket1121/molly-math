@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🧮 茉莉学算数 🌸</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; }
+body {
+  font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+  background:linear-gradient(160deg,#fce4ec 0%,#e8eaf6 50%,#e0f7fa 100%);
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center;
+  padding:10px 10px 20px;
+  overflow-x:hidden;
+}
+
+/* ── 浮动装饰 ── */
+.deco { position:fixed; font-size:1.8rem; opacity:0.25; pointer-events:none; animation:floaty 4s ease-in-out infinite; }
+.d1{top:8px;left:8px;animation-delay:0s}
+.d2{top:8px;right:8px;animation-delay:1.2s}
+.d3{bottom:60px;left:8px;animation-delay:2s}
+.d4{bottom:60px;right:8px;animation-delay:0.6s}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-8px) rotate(5deg)}}
+
+/* ── 标题 ── */
+.hd-title { font-size:1.6rem; color:#7b1fa2; font-weight:900; margin-bottom:2px; text-shadow:0 2px 8px rgba(123,31,162,.15); }
+.hd-sub { font-size:.85rem; color:#ab47bc; margin-bottom:10px; }
+
+/* ── 卡片 ── */
+.card {
+  background:white; border-radius:22px;
+  padding:18px 16px 20px;
+  box-shadow:0 8px 30px rgba(123,31,162,.13);
+  width:100%; max-width:420px;
+}
+
+/* ── 关卡轨道 ── */
+.track-wrap { margin-bottom:12px; }
+.track { display:flex; align-items:center; justify-content:space-between; position:relative; padding:0 6px; }
+.track::before {
+  content:''; position:absolute; top:14px; left:20px; right:20px;
+  height:4px; background:#ede7f6; border-radius:2px;
+}
+.tdot {
+  width:28px; height:28px; border-radius:50%;
+  border:3px solid #e0e0e0; background:white;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.7rem; font-weight:900; color:#bbb;
+  position:relative; z-index:1; transition:all .3s;
+  flex-shrink:0;
+}
+.tdot.done  { background:#e8f5e9; border-color:#66bb6a; color:#388e3c; }
+.tdot.cur   { background:#fff8e1; border-color:#ffa726; color:#e65100; transform:scale(1.18); box-shadow:0 2px 10px rgba(255,167,38,.4); }
+.track-labels { display:flex; justify-content:space-between; padding:4px 6px 0; }
+.tlbl { font-size:.58rem; color:#ccc; text-align:center; width:52px; line-height:1.3; }
+.tlbl.cur { color:#f57c00; font-weight:700; }
+
+/* ── 进度条 ── */
+.prog-row {
+  display:flex; align-items:center; gap:8px;
+  margin-bottom:12px; font-size:.78rem; color:#bbb;
+}
+.prog-bar { flex:1; height:7px; background:#f3e5f5; border-radius:4px; overflow:hidden; }
+.prog-fill { height:100%; background:linear-gradient(90deg,#ce93d8,#ab47bc); border-radius:4px; transition:width .35s; }
+.prog-txt span { color:#ab47bc; font-weight:700; }
+
+/* ── 题目框 ── */
+.prob-box {
+  background:linear-gradient(135deg,#9c27b0 0%,#673ab7 100%);
+  border-radius:16px; padding:20px 16px 16px;
+  text-align:center; margin-bottom:14px; position:relative;
+}
+.prob-lv {
+  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+  background:#fff3e0; padding:3px 14px; border-radius:12px;
+  font-size:.72rem; color:#e65100; font-weight:700; white-space:nowrap;
+}
+.prob-text {
+  font-size:2.6rem; color:white; font-weight:900;
+  letter-spacing:4px; margin:8px 0 4px;
+  text-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.streak-msg { font-size:.75rem; color:rgba(255,255,255,.8); }
+
+/* ── 提示区 ── */
+.hint-box {
+  background:#fafafa; border:2px solid #f3e5f5;
+  border-radius:14px; padding:14px; margin-bottom:14px;
+  display:none;
+}
+.hint-box.show { display:block; }
+.hint-title { font-size:.8rem; color:#ab47bc; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:5px; }
+.hint-steps { display:flex; flex-direction:column; gap:6px; }
+.hstep {
+  display:flex; align-items:flex-start; gap:8px;
+  background:white; border-radius:10px; padding:8px 10px;
+  border:1.5px solid #f3e5f5;
+  opacity:0; transform:translateY(6px);
+  transition:all .32s ease;
+}
+.hstep.vis { opacity:1; transform:translateY(0); }
+.hstep.hi  { border-color:#ce93d8; background:#fce4ec; }
+.hstep-num {
+  width:20px; height:20px; border-radius:50%; background:#f3e5f5;
+  color:#ab47bc; font-size:.65rem; font-weight:900;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.hstep.hi .hstep-num { background:#ce93d8; color:white; }
+.hstep-txt { font-size:.82rem; color:#555; line-height:1.5; }
+.hstep-txt .hl { color:#ab47bc; font-weight:700; }
+.hstep-txt .ok { color:#388e3c; font-weight:700; }
+
+/* ── 凑十法可视化 ── */
+.dots-wrap { margin:6px 0 4px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+.dot-grp { display:flex; gap:3px; flex-wrap:wrap; justify-content:center; max-width:180px; }
+.dot {
+  width:18px; height:18px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.55rem; font-weight:700; transition:all .3s;
+}
+.dot.a { background:#7986cb; color:white; }
+.dot.b { background:#ef9a9a; color:white; }
+.dot.moved { background:#ff7043; transform:scale(1.25); }
+.dot.ten { background:#ffd54f; border:2px solid #ffa726; }
+
+/* ── 竖式动画 ── */
+.vert-box {
+  background:#fffde7; border:2px dashed #ffd54f;
+  border-radius:12px; padding:12px 16px;
+  display:inline-block; min-width:130px;
+  margin:0 auto 6px; display:none;
+}
+.vert-box.show { display:inline-block; }
+.vrow {
+  display:flex; align-items:center; justify-content:flex-end;
+  gap:6px; font-size:1.8rem; font-weight:900; color:#5a5a5a;
+  min-height:38px; opacity:0; transform:translateY(8px);
+  transition:all .38s ease;
+}
+.vrow.vis { opacity:1; transform:translateY(0); }
+.vrow.hi  { color:#e65100; }
+.vop { font-size:2rem; color:#9c27b0; margin-right:4px; }
+.vnum { min-width:50px; text-align:right; }
+.vline { width:100%; height:3px; background:#5a5a5a; border-radius:2px; opacity:0; transition:opacity .3s; margin:2px 0; }
+.vline.vis { opacity:1; }
+.carry-sup { color:#e53935; font-size:.9rem; vertical-align:super; }
+.borrow-sup { color:#e53935; font-size:.9rem; vertical-align:super; }
+.vans { color:#2e7d32; }
+
+/* ── 分解法可视化 ── */
+.decomp-wrap { font-size:.82rem; color:#555; margin-top:4px; line-height:1.8; text-align:center; }
+.decomp-wrap .hl { color:#ab47bc; font-weight:700; }
+.decomp-wrap .ok { color:#2e7d32; font-weight:700; }
+.number-line-wrap { margin:6px 0; overflow-x:auto; }
+.number-line-svg { display:block; margin:0 auto; }
+
+/* ── 讲解收听按钮 ── */
+.speak-btn {
+  width:100%; padding:8px; border:2px solid #e1bee7;
+  border-radius:10px; background:white; color:#9c27b0;
+  font-size:.82rem; cursor:pointer; display:flex;
+  align-items:center; justify-content:center; gap:5px;
+  margin-top:8px; transition:all .2s;
+}
+.speak-btn:hover { background:#fce4ec; }
+.speaking { display:none; align-items:center; gap:3px; justify-content:center; margin-top:6px; }
+.speaking.show { display:flex; }
+.wbar { width:3px; height:12px; background:#ab47bc; border-radius:2px; animation:wav .7s ease-in-out infinite; }
+.wbar:nth-child(2){animation-delay:.1s} .wbar:nth-child(3){animation-delay:.2s} .wbar:nth-child(4){animation-delay:.3s}
+@keyframes wav{0%,100%{height:5px}50%{height:16px}}
+
+/* ── 输入区 ── */
+.input-row { display:flex; gap:10px; justify-content:center; margin-bottom:12px; }
+.ans-input {
+  width:110px; height:52px; font-size:1.6rem; text-align:center;
+  border:2.5px solid #e1bee7; border-radius:12px; outline:none;
+  transition:border .2s;
+}
+.ans-input:focus { border-color:#ab47bc; box-shadow:0 0 0 3px rgba(171,71,188,.15); }
+.submit-btn {
+  height:52px; padding:0 22px;
+  background:linear-gradient(135deg,#ce93d8,#ab47bc);
+  border:none; border-radius:12px; color:white;
+  font-size:1rem; font-weight:700; cursor:pointer; transition:all .2s;
+}
+.submit-btn:active { transform:scale(.95); }
+
+/* ── 操作按钮 ── */
+.act-row { display:flex; gap:8px; justify-content:center; }
+.act-btn {
+  padding:9px 16px; border:2px solid #e1bee7;
+  border-radius:20px; background:white; font-size:.82rem;
+  color:#9c27b0; cursor:pointer; transition:all .2s;
+}
+.act-btn:active { background:#fce4ec; }
+.act-btn.hl-btn { background:#fff3e0; border-color:#ffb74d; color:#e65100; }
+
+/* ── 弹窗 ── */
+.mask { position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:90;opacity:0;visibility:hidden;transition:all .2s; }
+.mask.show { opacity:1;visibility:visible; }
+.popup {
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(.85);
+  background:white; padding:28px 24px; border-radius:22px;
+  text-align:center; z-index:91; box-shadow:0 16px 50px rgba(0,0,0,.15);
+  opacity:0; transition:all .22s; min-width:220px;
+}
+.popup.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+.popup.ok  { border:3px solid #a5d6a7; }
+.popup.ng  { border:3px solid #ef9a9a; }
+.popup-icon { font-size:3rem; margin-bottom:6px; }
+.popup-title { font-size:1.25rem; color:#555; font-weight:700; margin-bottom:4px; }
+.popup-detail { font-size:.82rem; color:#999; }
+
+/* ── 通关页 ── */
+.win-page { display:none; text-align:center; padding:24px 16px; }
+.win-icon { font-size:4rem; animation:winjump .6s ease-in-out infinite alternate; }
+@keyframes winjump{0%{transform:scale(1) rotate(-5deg)}100%{transform:scale(1.1) rotate(5deg)}}
+.win-title { font-size:1.5rem; color:#7b1fa2; font-weight:900; margin:10px 0 4px; }
+.win-sub { font-size:.9rem; color:#ab47bc; margin-bottom:16px; }
+.win-stats { display:flex; justify-content:center; gap:28px; margin-bottom:16px; }
+.wstat-v { font-size:1.8rem; font-weight:900; color:#ab47bc; }
+.wstat-l { font-size:.72rem; color:#bbb; }
+.stars { display:flex; justify-content:center; gap:6px; margin-bottom:18px; font-size:2rem; }
+.restart-btn {
+  padding:14px 40px;
+  background:linear-gradient(135deg,#ce93d8,#ab47bc);
+  border:none; border-radius:24px; color:white;
+  font-size:1rem; font-weight:700; cursor:pointer;
+  box-shadow:0 4px 18px rgba(171,71,188,.4); transition:all .2s;
+}
+.restart-btn:active { transform:scale(.95); }
+
+/* ── 开始页 ── */
+.start-page { text-align:center; padding:10px 0; }
+.start-mascot { font-size:5rem; animation:winjump .8s ease-in-out infinite alternate; margin-bottom:8px; }
+.start-title { font-size:1.3rem; color:#7b1fa2; font-weight:900; margin-bottom:6px; }
+.start-desc { font-size:.82rem; color:#aaa; line-height:1.9; margin-bottom:20px; }
+.start-btn {
+  padding:14px 46px;
+  background:linear-gradient(135deg,#ce93d8,#9c27b0);
+  border:none; border-radius:24px; color:white;
+  font-size:1.05rem; font-weight:700; cursor:pointer;
+  box-shadow:0 4px 18px rgba(156,39,176,.4); transition:all .2s;
+}
+.start-btn:active { transform:scale(.95); }
+
+/* ── 音效按钮 ── */
+.snd-btn {
+  position:fixed; top:12px; right:12px;
+  width:40px; height:40px; border-radius:50%;
+  border:2px solid #e1bee7; background:white;
+  font-size:1.1rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  z-index:200; transition:all .2s;
+}
+.snd-btn:active { transform:scale(.9); }
+.snd-btn.mute { opacity:.4; }
+
+/* ── 彩带 ── */
+.confetti-wrap { position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:180; }
+.conf { position:absolute; width:9px; height:9px; border-radius:2px; animation:confdrop 1.5s ease-out forwards; }
+@keyframes confdrop{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* 游戏体隐藏默认 */
+.game-body { display:none; }
+.game-body.on { display:block; }
+</style>
+</head>
+<body>
+
+<div class="deco d1">🌸</div>
+<div class="deco d2">🌟</div>
+<div class="deco d3">🐣</div>
+<div class="deco d4">🍬</div>
+
+<h1 class="hd-title">🧮 茉莉学算数 🌸</h1>
+<p class="hd-sub">和小猫一起闯关吧！</p>
+
+<div class="card" id="mainCard">
+
+  <!-- ══ 开始页 ══ -->
+  <div class="start-page" id="startPage">
+    <div class="start-mascot">🐱</div>
+    <div class="start-title">小猫咪等你啦！</div>
+    <div class="start-desc">
+      5个关卡，越来越难<br>
+      连续答对5题升级 🆙<br>
+      连续答错2题退关 😺<br>
+      从第2关开始有解题提示哦～
+    </div>
+    <button class="start-btn" id="startBtn">🎯 开始闯关</button>
+  </div>
+
+  <!-- ══ 游戏主体 ══ -->
+  <div class="game-body" id="gameBody">
+
+    <!-- 关卡轨道 -->
+    <div class="track-wrap">
+      <div class="track" id="track"></div>
+      <div class="track-labels" id="trackLabels"></div>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="prog-row">
+      <div class="prog-txt">对 <span id="winCnt">0</span>/5</div>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <div class="prog-txt">错 <span id="loseCnt">0</span>/2</div>
+    </div>
+
+    <!-- 题目框 -->
+    <div class="prob-box">
+      <div class="prob-lv" id="probLv">第1关 · 10以内加减法</div>
+      <div class="prob-text" id="probText">_ + _ = ?</div>
+      <div class="streak-msg" id="streakMsg">连续答对5题进入下一关~</div>
+    </div>
+
+    <!-- 解题提示 -->
+    <div class="hint-box" id="hintBox">
+      <div class="hint-title">💡 <span id="hintTitle">解题小帮手</span></div>
+      <!-- 凑十法可视化容器 -->
+      <div id="dotsArea" style="text-align:center;margin-bottom:6px;"></div>
+      <!-- 竖式容器 -->
+      <div style="text-align:center;">
+        <div class="vert-box" id="vertBox">
+          <div class="vrow" id="vr0"></div>
+          <div class="vrow" id="vr1"></div>
+          <div class="vline" id="vline"></div>
+          <div class="vrow" id="vr2"></div>
+          <div class="vrow" id="vr3"></div>
+        </div>
+      </div>
+      <!-- 分步骤文字提示 -->
+      <div class="hint-steps" id="hintSteps"></div>
+      <!-- 朗读按钮 -->
+      <button class="speak-btn" id="speakBtn">🔊 点击听讲解</button>
+      <div class="speaking" id="speaking">
+        <div class="wbar"></div><div class="wbar"></div>
+        <div class="wbar"></div><div class="wbar"></div>
+      </div>
+    </div>
+
+    <!-- 输入区 -->
+    <div class="input-row">
+      <input type="text" inputmode="numeric" enterkeyhint="done"
+             class="ans-input" id="ansInput"
+             placeholder="?" autocomplete="off" autocorrect="off"
+             autocapitalize="off" spellcheck="false">
+      <button class="submit-btn" id="submitBtn">回答 ✓</button>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="act-row">
+      <button class="act-btn" id="skipBtn">跳过 ▸</button>
+      <button class="act-btn" id="hintBtn">💡 看提示</button>
+    </div>
+
+  </div><!-- /game-body -->
+
+  <!-- ══ 通关页 ══ -->
+  <div class="win-page" id="winPage">
+    <div class="win-icon">🎉</div>
+    <div class="win-title">🌟 全部通关！</div>
+    <div class="win-sub">茉莉太棒了，你是数学小天才！</div>
+    <div class="stars" id="winStars"></div>
+    <div class="win-stats">
+      <div class="wstat">
+        <div class="wstat-v" id="winScore">0</div>
+        <div class="wstat-l">总分</div>
+      </div>
+      <div class="wstat">
+        <div class="wstat-v" id="winRate">0%</div>
+        <div class="wstat-l">正确率</div>
+      </div>
+    </div>
+    <button class="restart-btn" id="restartBtn">🔄 再玩一次</button>
+  </div>
+
+</div><!-- /card -->
+
+<!-- 弹窗 -->
+<div class="mask" id="mask"></div>
+<div class="popup" id="popup">
+  <div class="popup-icon" id="popIcon"></div>
+  <div class="popup-title" id="popTitle"></div>
+  <div class="popup-detail" id="popDetail"></div>
+</div>
+
+<!-- 音效按钮 -->
+<button class="snd-btn" id="sndBtn">🔔</button>
+
+<!-- 彩带 -->
+<div class="confetti-wrap" id="confetti"></div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════
+//  常量
+// ════════════════════════════════════════════
+const LV_NAMES = ['10以内加减','20以内(小+小)','20以内(小+大)','百以内整数','百以内两位数'];
+const WIN_NEED = 5, LOSE_MAX = 2;
+
+// ════════════════════════════════════════════
+//  状态
+// ════════════════════════════════════════════
+let G = {
+  level:1, winStreak:0, loseStreak:0,
+  correct:0, total:0, score:0,
+  problem:null, hintShown:false,
+  soundOn:true, busy:false, running:false,
+  isSpeaking:false, hintStepData:[], vertData:null,
+  animTid:null
+};
+
+// ════════════════════════════════════════════
+//  DOM
+// ════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const D = {
+  startPage:  $('startPage'),
+  gameBody:   $('gameBody'),
+  winPage:    $('winPage'),
+  track:      $('track'),
+  trackLabels:$('trackLabels'),
+  winCnt:     $('winCnt'),
+  loseCnt:    $('loseCnt'),
+  progFill:   $('progFill'),
+  probLv:     $('probLv'),
+  probText:   $('probText'),
+  streakMsg:  $('streakMsg'),
+  hintBox:    $('hintBox'),
+  hintTitle:  $('hintTitle'),
+  dotsArea:   $('dotsArea'),
+  vertBox:    $('vertBox'),
+  vr:         [0,1,2,3].map(i=>$('vr'+i)),
+  vline:      $('vline'),
+  hintSteps:  $('hintSteps'),
+  speakBtn:   $('speakBtn'),
+  speaking:   $('speaking'),
+  ansInput:   $('ansInput'),
+  submitBtn:  $('submitBtn'),
+  skipBtn:    $('skipBtn'),
+  hintBtn:    $('hintBtn'),
+  mask:       $('mask'),
+  popup:      $('popup'),
+  popIcon:    $('popIcon'),
+  popTitle:   $('popTitle'),
+  popDetail:  $('popDetail'),
+  sndBtn:     $('sndBtn'),
+  confetti:   $('confetti'),
+  winStars:   $('winStars'),
+  winScore:   $('winScore'),
+  winRate:    $('winRate'),
+  restartBtn: $('restartBtn'),
+  startBtn:   $('startBtn'),
+};
+
+// ════════════════════════════════════════════
+//  音效 (Web Audio API)
+// ════════════════════════════════════════════
+let _ac = null;
+function ac() {
+  if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+  return _ac;
+}
+function tone(f,d,type='sine',g=0.22){
+  if(!G.soundOn) return;
+  try {
+    const ctx=ac(),o=ctx.createOscillator(),gn=ctx.createGain();
+    o.connect(gn); gn.connect(ctx.destination);
+    o.type=type; o.frequency.value=f;
+    gn.gain.setValueAtTime(g,ctx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+d);
+    o.start(); o.stop(ctx.currentTime+d);
+  }catch(e){}
+}
+function sfxOk()  { tone(523,.12); setTimeout(()=>tone(659,.12),110); setTimeout(()=>tone(784,.18),220); }
+function sfxNg()  { tone(280,.25,'sawtooth',.12); setTimeout(()=>tone(220,.3,'sawtooth',.1),220); }
+function sfxUp()  { [440,554,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.15),i*100)); }
+function sfxWin() { [523,659,784,1047,784,659,523,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,'sine',.28),i*110)); }
+function sfxClick(){ tone(440,.06,'sine',.07); }
+
+// ════════════════════════════════════════════
+//  语音合成（童声风格）
+// ════════════════════════════════════════════
+function speak(text, done) {
+  if (!G.soundOn) { done&&done(); return; }
+  const clean = text
+    .replace(/[+]/g,'加').replace(/[-−]/g,'减')
+    .replace(/=/g,'等于').replace(/<[^>]+>/g,'');
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.lang='zh-CN'; utt.rate=0.82; utt.pitch=1.4; utt.volume=0.9;
+  // 优选童声/女声
+  const vv = speechSynthesis.getVoices();
+  const v = vv.find(v=>v.lang.includes('zh')&&(
+    v.name.includes('Ting')||v.name.includes('Mei')||v.name.includes('Ya')||
+    v.name.includes('Lin')||v.name.includes('Xiao')||v.name.includes('Female')
+  )) || vv.find(v=>v.lang.includes('zh'));
+  if(v) utt.voice=v;
+  utt.onstart = ()=>{
+    D.speaking.classList.add('show');
+    G.isSpeaking=true;
+  };
+  let endFired = false;
+  function finish(){
+    if(endFired) return; endFired=true;
+    D.speaking.classList.remove('show');
+    G.isSpeaking=false;
+    done&&done();
+  }
+  utt.onend = finish;
+  utt.onerror = finish;
+  // 移动端兜底：2.5秒后若未触发onend则强制继续
+  const tid = setTimeout(finish, 2500);
+  utt.onend = ()=>{ clearTimeout(tid); finish(); };
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utt);
+}
+function stopSpeak(){
+  speechSynthesis.cancel();
+  D.speaking.classList.remove('show');
+  G.isSpeaking=false;
+}
+
+// ════════════════════════════════════════════
+//  题目生成
+// ════════════════════════════════════════════
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+function makeProblem(lv){
+  let a,b,ans,op,name;
+  const isAdd = Math.random()>.45;
+
+  switch(lv){
+    case 1: // 10以内加减
+      if(isAdd){
+        a=rnd(1,8); b=rnd(1,9-a); ans=a+b; op='+'; name='10以内加法';
+      } else {
+        a=rnd(2,9); b=rnd(1,a-1); ans=a-b; op='-'; name='10以内减法';
+      }
+      break;
+    case 2: // 20以内：两个个位数（进位加/退位减）
+      if(isAdd){
+        // 凑十法：a+b>10
+        a=rnd(2,9); b=rnd(Math.max(1,11-a),9); ans=a+b; op='+'; name='凑十法进位加';
+      } else {
+        // 被减数11-19，减数1-9
+        a=rnd(11,19); b=rnd(1,a-10); ans=a-b; op='-'; name='退位减法';
+      }
+      break;
+    case 3: // 20以内：个位数+十位数（11-19）
+      if(isAdd){
+        a=rnd(1,9); b=rnd(11,18); ans=a+b; op='+'; name='个位+十几';
+        // 确保和≤20
+        if(ans>20){a=rnd(1,4);b=rnd(11,16);ans=a+b;}
+      } else {
+        // 两位数-个位数，有退位情况
+        a=rnd(12,20); b=rnd(1,9);
+        if(a-b<1){a=rnd(12,20);b=rnd(1,a-1);}
+        ans=a-b; op='-'; name='两位数减一位数';
+      }
+      break;
+    case 4: // 100以内：整十/整五/个位+十位混合
+      const t4 = rnd(1,3);
+      if(t4===1){ // 整十数
+        if(isAdd){
+          a=rnd(1,8)*10; b=rnd(1,9-a/10)*10; ans=a+b; op='+'; name='整十数加法';
+        } else {
+          a=rnd(2,9)*10; b=rnd(1,a/10-1)*10; ans=a-b; op='-'; name='整十数减法';
+        }
+      } else if(t4===2){ // 整五数
+        if(isAdd){
+          a=rnd(1,6)*5; b=rnd(1,6)*5;
+          if(a+b>100){b=rnd(1,3)*5;}
+          ans=a+b; op='+'; name='整五数加法';
+        } else {
+          a=rnd(4,18)*5; b=rnd(1,a/5-1)*5;
+          if(a-b<0){a=rnd(6,18)*5;b=rnd(1,4)*5;}
+          ans=a-b; op='-'; name='整五数减法';
+        }
+      } else { // 个位数+整十数
+        if(isAdd){
+          a=rnd(10,80); b=rnd(1,9);
+          if(a%10===0) a+=rnd(1,9);
+          if(a+b>100){b=rnd(1,3);}
+          ans=a+b; op='+'; name='整十数加个位';
+        } else {
+          a=rnd(20,99); b=rnd(1,9);
+          if(a-b<0){b=rnd(1,a);}
+          ans=a-b; op='-'; name='整十数减个位';
+        }
+      }
+      break;
+    case 5: // 100以内随机两位数
+      if(isAdd){
+        a=rnd(12,75); b=rnd(11,35);
+        if(a+b>100){b=rnd(5,99-a);}
+        ans=a+b; op='+'; name='两位数加法(竖式)';
+      } else {
+        a=rnd(30,95); b=rnd(11,50);
+        if(b>=a){b=rnd(5,a-5);}
+        ans=a-b; op='-'; name='两位数减法(竖式)';
+      }
+      break;
+  }
+  return {a,b,ans,op,name,lv};
+}
+
+// ════════════════════════════════════════════
+//  解题提示生成（严格按一年级课本）
+// ════════════════════════════════════════════
+function makeHint(p){
+  const {a,b,ans,op,lv} = p;
+  const steps = [];
+
+  if(lv===1) return { steps:[], dots:null, vert:null, title:'直接数一数' };
+
+  if(lv===2){
+    if(op==='+'){
+      // 凑十法：把b拆分成(10-a)和余数
+      const need = 10-a;
+      const rest = b-need;
+      steps.push({ t:`把 <span class="hl">${b}</span> 拆成 <span class="hl">${need}</span> 和 <span class="hl">${rest}</span>`, sub:'' });
+      steps.push({ t:`${a} + <span class="hl">${need}</span> = <span class="ok">10</span>`, sub:'先凑成10' });
+      steps.push({ t:`10 + <span class="hl">${rest}</span> = <span class="ok">${ans}</span>`, sub:'再加余下的' });
+      return { steps, dots:{type:'ten',a,b,need,rest,ans}, vert:null, title:'凑十法 🪄' };
+    } else {
+      // 退位减法：20以内，a(11-19)-b(1-9)
+      // 方法：把a拆成10和个位 → 10-b+个位
+      const au=a%10, a1=Math.floor(a/10);
+      if(b>au){
+        const rem=b-au;
+        steps.push({ t:`把 <span class="hl">${a}</span> 看成 <span class="hl">10</span> 和 <span class="hl">${au}</span>`, sub:'' });
+        steps.push({ t:`<span class="hl">10</span> − ${rem} = <span class="ok">${10-rem}</span>`, sub:`先从10里减去 ${rem}` });
+        steps.push({ t:`<span class="ok">${10-rem}</span> + <span class="hl">${au}</span> = <span class="ok">${ans}</span>`, sub:'再加个位数' });
+      } else {
+        steps.push({ t:`${a} − <span class="hl">${b}</span>`, sub:'' });
+        steps.push({ t:`个位 ${au} − ${b} = <span class="ok">${au-b}</span>`, sub:'' });
+        steps.push({ t:`十位不变，答案 <span class="ok">${ans}</span>`, sub:'' });
+      }
+      return { steps, dots:{type:'sub',a,b,ans}, vert:null, title:'破十法 ✂️' };
+    }
+  }
+
+  if(lv===3){
+    if(op==='+'){
+      const au=a%10, bu=b%10, b1=Math.floor(b/10);
+      const sum0=au+bu;
+      if(sum0>=10){
+        steps.push({ t:`个位相加：${au} + ${bu} = <span class="hl">${sum0}</span>`, sub:'个位之和' });
+        steps.push({ t:`<span class="hl">${sum0}</span> 满10，进一位`, sub:'满十进一' });
+        steps.push({ t:`十位：${b1} + 1 = <span class="hl">${b1+1}</span>`, sub:'' });
+        steps.push({ t:`答案 <span class="ok">${ans}</span>`, sub:'' });
+      } else {
+        steps.push({ t:`${a} + ${b}`, sub:'个位+个位，十位不变' });
+        steps.push({ t:`个位：${au} + ${bu} = <span class="ok">${sum0}</span>`, sub:'' });
+        steps.push({ t:`答案 <span class="ok">${ans}</span>`, sub:'' });
+      }
+    } else {
+      const au=a%10, bu=b%10, a1=Math.floor(a/10);
+      if(au<bu){
+        steps.push({ t:`个位 ${au} 不够减 ${bu}，向十位借 1`, sub:'借位' });
+        steps.push({ t:`个位变成 <span class="hl">${au+10}</span>，十位变成 <span class="hl">${a1-1}</span>`, sub:'' });
+        steps.push({ t:`个位：${au+10} − ${bu} = <span class="hl">${au+10-bu}</span>`, sub:'' });
+        steps.push({ t:`十位：${a1-1} − ${Math.floor(b/10)} = <span class="hl">${(a1-1)-Math.floor(b/10)}</span>`, sub:'' });
+        steps.push({ t:`答案 <span class="ok">${ans}</span>`, sub:'' });
+      } else {
+        steps.push({ t:`${a} − ${b}`, sub:'个位够减，直接算' });
+        steps.push({ t:`个位：${au} − ${bu} = <span class="ok">${au-bu}</span>`, sub:'' });
+        steps.push({ t:`答案 <span class="ok">${ans}</span>`, sub:'' });
+      }
+    }
+    return { steps, dots:null, vert:null, title:'拆分法 🔢' };
+  }
+
+  if(lv===4){
+    const a1=Math.floor(a/10), a0=a%10;
+    const b1=Math.floor(b/10), b0=b%10;
+    if(op==='+'){
+      if(a0===0&&b0===0){
+        steps.push({ t:`${a} + ${b}`, sub:'整十数加法' });
+        steps.push({ t:`十位：${a1} + ${b1} = <span class="hl">${a1+b1}</span>`, sub:'' });
+        steps.push({ t:`答案 <span class="ok">${ans}</span>（后面加0）`, sub:'' });
+      } else {
+        steps.push({ t:`先把整十和个位分开看`, sub:'' });
+        steps.push({ t:`整十部分：${a1*10} + ${b1*10} = <span class="hl">${(a1+b1)*10}</span>`, sub:'' });
+        steps.push({ t:`个位部分：${a0} + ${b0} = <span class="hl">${a0+b0}</span>`, sub:'' });
+        steps.push({ t:`合起来：<span class="ok">${ans}</span>`, sub:'' });
+      }
+    } else {
+      if(a0===0&&b0===0){
+        steps.push({ t:`${a} − ${b}`, sub:'整十数减法' });
+        steps.push({ t:`十位：${a1} − ${b1} = <span class="hl">${a1-b1}</span>`, sub:'' });
+        steps.push({ t:`答案 <span class="ok">${ans}</span>（后面加0）`, sub:'' });
+      } else {
+        if(a0>=b0){
+          steps.push({ t:`个位够减：${a0} − ${b0} = <span class="hl">${a0-b0}</span>`, sub:'' });
+          steps.push({ t:`十位：${a1} − ${b1} = <span class="hl">${a1-b1}</span>`, sub:'' });
+          steps.push({ t:`答案 <span class="ok">${ans}</span>`, sub:'' });
+        } else {
+          steps.push({ t:`个位 ${a0} 不够减 ${b0}，借位`, sub:'' });
+          steps.push({ t:`个位：${a0+10} − ${b0} = <span class="hl">${a0+10-b0}</span>`, sub:'' });
+          steps.push({ t:`十位：${a1-1} − ${b1} = <span class="hl">${a1-1-b1}</span>`, sub:'' });
+          steps.push({ t:`答案 <span class="ok">${ans}</span>`, sub:'' });
+        }
+      }
+    }
+    return { steps, dots:null, vert:null, title:'分拆计算法 📐' };
+  }
+
+  if(lv===5){
+    // 竖式（详见 genVert）
+    return { steps, dots:null, vert:genVert(p), title:'竖式计算法 📋' };
+  }
+
+  return { steps:[], dots:null, vert:null, title:'解题提示' };
+}
+
+// ── 竖式数据生成 ──
+function genVert(p){
+  const {a,b,ans,op} = p;
+  const a1=Math.floor(a/10),a0=a%10;
+  const b1=Math.floor(b/10),b0=b%10;
+  const rows=[], voices=[];
+
+  if(op==='+'){
+    const carry = a0+b0>=10;
+    const sum0  = a0+b0;
+    const sum1  = a1+b1+(carry?1:0);
+    rows.push({ content:`<span class="vop">+</span><span class="vnum">${b}</span>`, hi:false });
+    rows.push({ content:`<span style="width:2rem"></span><span class="vnum">${a}</span>`, hi:false });
+    rows.push('line');
+    if(carry){
+      rows.push({ content:`<span class="carry-sup" style="font-size:.8rem">进1</span><span class="vnum">${sum0%10}</span>`, hi:true });
+    } else {
+      rows.push({ content:`<span class="vnum">${sum0}</span>`, hi:true });
+    }
+    rows.push({ content:`<span class="vnum vans">${ans}</span>`, hi:true });
+
+    voices.push(`${a} 加 ${b}，列竖式`);
+    voices.push(`个位 ${a0} 加 ${b0} 等于 ${sum0}${carry?'，满十进一':''}`);
+    voices.push(`十位 ${a1} 加 ${b1}${carry?' 加进位 1':''} 等于 ${sum1}`);
+    voices.push(`答案是 ${ans}`);
+  } else {
+    const borrow = a0<b0;
+    rows.push({ content:`<span class="vop">−</span><span class="vnum">${b}</span>`, hi:false });
+    rows.push({ content:`<span style="width:2rem"></span><span class="vnum">${a}</span>`, hi:false });
+    rows.push('line');
+    if(borrow){
+      rows.push({ content:`<span class="borrow-sup" style="font-size:.8rem">借1</span><span class="vnum">${a0+10-b0}</span>`, hi:true });
+    } else {
+      rows.push({ content:`<span class="vnum">${a0-b0}</span>`, hi:true });
+    }
+    rows.push({ content:`<span class="vnum vans">${ans}</span>`, hi:true });
+
+    voices.push(`${a} 减 ${b}，列竖式`);
+    if(borrow){
+      voices.push(`个位 ${a0} 不够减 ${b0}，向十位借一当十，变成 ${a0+10} 减 ${b0} 等于 ${a0+10-b0}`);
+      voices.push(`十位 ${a1-1} 减 ${b1} 等于 ${a1-1-b1}`);
+    } else {
+      voices.push(`个位 ${a0} 减 ${b0} 等于 ${a0-b0}`);
+      voices.push(`十位 ${a1} 减 ${b1} 等于 ${a1-b1}`);
+    }
+    voices.push(`答案是 ${ans}`);
+  }
+  return { rows, voices };
+}
+
+// ════════════════════════════════════════════
+//  凑十法可视化（SVG小圆点）
+// ════════════════════════════════════════════
+function renderDots(dotsData){
+  const d = D.dotsArea;
+  d.innerHTML='';
+  if(!dotsData) return;
+
+  if(dotsData.type==='ten'){
+    const {a,b,need,rest,ans} = dotsData;
+    // 第一阶段：a个蓝圆 + b个红圆
+    const wrap = document.createElement('div');
+    wrap.style.cssText='display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;';
+
+    const aDots=[],bDots=[];
+    for(let i=0;i<a;i++){
+      const dt=makeDot('a'); aDots.push(dt); wrap.appendChild(dt);
+    }
+    for(let i=0;i<b;i++){
+      const dt=makeDot('b'); bDots.push(dt); wrap.appendChild(dt);
+    }
+    d.appendChild(wrap);
+
+    // 说明
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:.72rem;color:#9c27b0;margin-top:2px;';
+    lbl.textContent=`把${b}个❤️分成${need}个和${rest}个，先凑成10`;
+    d.appendChild(lbl);
+
+    // 动画：把前need个红圆变黄（凑十）
+    setTimeout(()=>{
+      for(let i=0;i<need&&i<bDots.length;i++){
+        bDots[i].classList.remove('b');
+        bDots[i].classList.add('ten');
+        bDots[i].textContent='';
+      }
+    },700);
+    return;
+  }
+
+  if(dotsData.type==='sub'){
+    const {a,b,ans} = dotsData;
+    const wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;';
+    for(let i=0;i<a;i++){
+      const dt=makeDot(i<b?'b':'a'); wrap.appendChild(dt);
+    }
+    d.appendChild(wrap);
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:.72rem;color:#9c27b0;margin-top:2px;';
+    lbl.innerHTML=`<span style="color:#ef9a9a">❤️ ${b}个</span>拿走，剩下<span style="color:#7986cb;font-weight:700"> ${ans}个</span>`;
+    d.appendChild(lbl);
+    return;
+  }
+}
+
+function makeDot(cls){
+  const dt=document.createElement('div');
+  dt.className='dot '+cls;
+  dt.textContent=cls==='a'?'💙':'❤️';
+  dt.style.cssText='width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;background:transparent;';
+  return dt;
+}
+
+// ════════════════════════════════════════════
+//  竖式动画
+// ════════════════════════════════════════════
+function resetVert(){
+  if(G.animTid){clearTimeout(G.animTid);G.animTid=null;}
+  D.vertBox.classList.remove('show');
+  D.vr.forEach(r=>{r.innerHTML='';r.classList.remove('vis','hi');});
+  D.vline.classList.remove('vis');
+}
+
+function playVert(vd){
+  if(!vd) return;
+  resetVert();
+  D.vertBox.classList.add('show');
+  const {rows} = vd;
+  let rowIdx=0, dataIdx=0;
+  const ROWS=['vr0','vr1',null,'vr2','vr3'];
+
+  function step(){
+    if(dataIdx>=rows.length) return;
+    const row=rows[dataIdx];
+    if(row==='line'){
+      D.vline.classList.add('vis');
+    } else {
+      const el=$('vr'+rowIdx);
+      if(el){
+        el.innerHTML=row.content;
+        el.classList.add('vis');
+        if(row.hi) el.classList.add('hi');
+      }
+      rowIdx++;
+    }
+    dataIdx++;
+    G.animTid=setTimeout(step,650);
+  }
+  G.animTid=setTimeout(step,100);
+}
+
+// ════════════════════════════════════════════
+//  UI 更新
+// ════════════════════════════════════════════
+function renderTrack(){
+  const names=['10内','20内\n小+小','20内\n小+大','百内\n整数','百内\n两位'];
+  let tr='',tl='';
+  for(let i=1;i<=5;i++){
+    const cls=i<G.level?'tdot done':i===G.level?'tdot cur':'tdot';
+    tr+=`<div class="${cls}">${i}</div>`;
+    const lc=i===G.level?'tlbl cur':'tlbl';
+    tl+=`<div class="${lc}">${names[i-1]}</div>`;
+  }
+  D.track.innerHTML=tr;
+  D.trackLabels.innerHTML=tl;
+}
+
+function renderProg(){
+  D.winCnt.textContent=G.winStreak;
+  D.loseCnt.textContent=G.loseStreak;
+  D.progFill.style.width=(G.winStreak/WIN_NEED*100)+'%';
+  D.probLv.textContent=`第${G.level}关 · ${LV_NAMES[G.level-1]}`;
+  const left=WIN_NEED-G.winStreak;
+  D.streakMsg.textContent=G.winStreak>0?`再对${left}题升级！🔥`:`连续答对${WIN_NEED}题升级 ⭐`;
+}
+
+// ════════════════════════════════════════════
+//  新题目
+// ════════════════════════════════════════════
+function newProblem(){
+  stopSpeak();
+  resetVert();
+  G.problem=makeProblem(G.level);
+  G.hintShown=false;
+  G.busy=false;
+
+  const p=G.problem;
+  const opStr=p.op==='-'?'−':p.op;
+  D.probText.textContent=`${p.a} ${opStr} ${p.b} = ?`;
+  D.ansInput.value='';
+  D.hintBox.classList.remove('show');
+  D.hintSteps.innerHTML='';
+  D.dotsArea.innerHTML='';
+  D.hintBtn.classList.remove('hl-btn');
+
+  renderProg();
+
+  // 读题声
+  setTimeout(()=>{
+    speak(`${p.a} ${p.op==='+'?'加':'减'} ${p.b} 等于多少？`);
+  },300);
+
+  // 焦点（移动端不强制focus，避免弹键盘遮挡）
+  if(window.innerWidth>500) D.ansInput.focus();
+}
+
+// ════════════════════════════════════════════
+//  提交答案
+// ════════════════════════════════════════════
+function submitAnswer(){
+  if(G.busy||!G.running) return;
+  const val=parseInt(D.ansInput.value);
+  if(isNaN(val)){
+    D.ansInput.style.border='2.5px solid #ef9a9a';
+    setTimeout(()=>D.ansInput.style.border='',600);
+    sfxNg(); return;
+  }
+  G.busy=true;
+  G.total++;
+
+  if(val===G.problem.ans){
+    // 正确
+    G.correct++; G.winStreak++; G.loseStreak=0;
+    G.score+=10+G.winStreak*2;
+    sfxOk(); showConfetti(12);
+
+    showPopup(true,'正确！🎉',`+${10+G.winStreak*2} 分`);
+    renderProg();
+
+    if(G.winStreak>=WIN_NEED){
+      setTimeout(()=>{
+        closePopup();
+        if(G.level<5){
+          G.level++; G.winStreak=0;
+          sfxUp();
+          renderTrack(); saveData();
+          speak(`太棒了！进入第${G.level}关！${LV_NAMES[G.level-1]}！`,()=>newProblem());
+        } else {
+          showWin();
+        }
+      },1100);
+      return;
+    }
+    saveData();
+    setTimeout(()=>{ closePopup(); newProblem(); },900);
+
+  } else {
+    // 错误
+    G.loseStreak++; G.winStreak=0;
+    sfxNg();
+    showPopup(false,['再想想~','慢慢想~','加油！'][rnd(0,2)],`答案是 ${G.problem.ans}`);
+    renderProg();
+
+    if(G.loseStreak>=LOSE_MAX&&G.level>1){
+      setTimeout(()=>{
+        closePopup();
+        G.level--; G.loseStreak=0; G.winStreak=0;
+        sfxNg(); renderTrack(); saveData();
+        speak(`没关系，回到第${G.level}关再练练。`,()=>newProblem());
+      },1300);
+      return;
+    }
+    saveData();
+    setTimeout(()=>{ closePopup(); newProblem(); },1300);
+  }
+}
+
+// ════════════════════════════════════════════
+//  跳过
+// ════════════════════════════════════════════
+function skipProblem(){
+  if(G.busy||!G.running) return;
+  G.loseStreak++; G.winStreak=0;
+  sfxNg(); renderProg();
+  if(G.loseStreak>=LOSE_MAX&&G.level>1){
+    G.level--; G.loseStreak=0; G.winStreak=0;
+    renderTrack();
+  }
+  saveData();
+  setTimeout(newProblem,200);
+}
+
+// ════════════════════════════════════════════
+//  显示提示
+// ════════════════════════════════════════════
+function showHint(){
+  if(!G.running||!G.problem) return;
+  sfxClick();
+  const p=G.problem;
+  if(p.lv===1){
+    speak('数一数就能算出来哦！'); return;
+  }
+
+  const h=makeHint(p);
+  G.hintStepData=h.steps;
+  D.hintTitle.textContent=h.title;
+  D.hintBox.classList.add('show');
+  D.hintBtn.classList.add('hl-btn');
+  D.hintSteps.innerHTML='';
+  D.dotsArea.innerHTML='';
+
+  // 渲染小圆点
+  renderDots(h.dots);
+
+  // 渲染竖式
+  if(h.vert){
+    playVert(h.vert);
+  }
+
+  // 渲染文字步骤
+  h.steps.forEach((s,i)=>{
+    const div=document.createElement('div');
+    div.className='hstep';
+    div.innerHTML=`<div class="hstep-num">${i+1}</div><div class="hstep-txt">${s.t}${s.sub?'<br><small style="color:#bbb">'+s.sub+'</small>':''}</div>`;
+    D.hintSteps.appendChild(div);
+    setTimeout(()=>div.classList.add('vis'),i*180+50);
+  });
+  G.hintShown=true;
+}
+
+// ════════════════════════════════════════════
+//  朗读提示
+// ════════════════════════════════════════════
+function speakHint(){
+  if(G.isSpeaking){ stopSpeak(); return; }
+  const p=G.problem;
+  if(!p) return;
+  const h=makeHint(p);
+  const allSteps=h.steps.map(s=>s.t.replace(/<[^>]+>/g,''));
+
+  // 竖式专属语音
+  if(h.vert){
+    const vv=h.vert.voices;
+    let i=0;
+    const next=()=>{ if(i<vv.length){ speak(vv[i++],next); } };
+    next(); return;
+  }
+
+  let i=0;
+  const steps=D.hintSteps.querySelectorAll('.hstep');
+  function next(){
+    if(i>=allSteps.length) return;
+    steps[i]&&steps[i].classList.add('hi');
+    steps[i-1]&&steps[i-1].classList.remove('hi');
+    speak(allSteps[i++],()=>setTimeout(next,250));
+  }
+  next();
+}
+
+// ════════════════════════════════════════════
+//  弹窗
+// ════════════════════════════════════════════
+function showPopup(ok,title,detail){
+  D.popIcon.textContent=ok?'🌟':'💫';
+  D.popTitle.textContent=title;
+  D.popDetail.textContent=detail;
+  D.popup.className='popup show '+(ok?'ok':'ng');
+  D.mask.classList.add('show');
+}
+function closePopup(){
+  D.popup.classList.remove('show');
+  D.mask.classList.remove('show');
+}
+
+// ════════════════════════════════════════════
+//  彩带
+// ════════════════════════════════════════════
+const CC=['#f48fb1','#ce93d8','#90caf9','#a5d6a7','#fff176','#ffcc80'];
+function showConfetti(n){
+  for(let i=0;i<n;i++){
+    setTimeout(()=>{
+      const c=document.createElement('div');
+      c.className='conf';
+      c.style.cssText=`left:${rnd(5,90)}%;background:${CC[rnd(0,CC.length-1)]};animation-delay:${rnd(0,4)/10}s;width:${6+rnd(0,6)}px;height:${6+rnd(0,6)}px;`;
+      D.confetti.appendChild(c);
+      setTimeout(()=>c.remove(),1800);
+    },i*60);
+  }
+}
+
+// ════════════════════════════════════════════
+//  通关页
+// ════════════════════════════════════════════
+function showWin(){
+  stopSpeak();
+  D.gameBody.classList.remove('on');
+  D.winPage.style.display='block';
+  const rate=G.total>0?Math.round(G.correct/G.total*100):0;
+  const stars=rate>=90?'⭐⭐⭐':rate>=70?'⭐⭐':'⭐';
+  D.winStars.textContent=stars;
+  D.winScore.textContent=G.score;
+  D.winRate.textContent=rate+'%';
+  sfxWin(); showConfetti(40);
+  speak('太棒了！茉莉全部通关！你是数学小天才！');
+  localStorage.removeItem('mj_math');
+}
+
+// ════════════════════════════════════════════
+//  开始 / 重新开始
+// ════════════════════════════════════════════
+function startGame(){
+  sfxClick();
+  loadData();
+  D.startPage.style.display='none';
+  D.gameBody.classList.add('on');
+  G.running=true;
+  G.winStreak=0; G.loseStreak=0;
+  G.correct=0; G.total=0; G.score=0;
+  renderTrack();
+  speak(`第${G.level}关，${LV_NAMES[G.level-1]}，开始！`,()=>newProblem());
+}
+
+function restartGame(){
+  sfxClick();
+  G.level=1; G.winStreak=0; G.loseStreak=0;
+  G.correct=0; G.total=0; G.score=0;
+  D.winPage.style.display='none';
+  D.gameBody.classList.add('on');
+  G.running=true;
+  renderTrack();
+  speak('重新开始！第1关，加油！',()=>newProblem());
+}
+
+// ════════════════════════════════════════════
+//  存档
+// ════════════════════════════════════════════
+function saveData(){ localStorage.setItem('mj_math',JSON.stringify({level:G.level,score:G.score,correct:G.correct,total:G.total})); }
+function loadData(){
+  try{
+    const d=JSON.parse(localStorage.getItem('mj_math')||'{}');
+    G.level=d.level||1; G.score=d.score||0;
+    G.correct=d.correct||0; G.total=d.total||0;
+  }catch(e){}
+}
+
+// ════════════════════════════════════════════
+//  音效开关
+// ════════════════════════════════════════════
+function toggleSound(){
+  G.soundOn=!G.soundOn;
+  D.sndBtn.textContent=G.soundOn?'🔔':'🔕';
+  D.sndBtn.classList.toggle('mute',!G.soundOn);
+  if(G.soundOn) sfxClick();
+  else stopSpeak();
+}
+
+// ════════════════════════════════════════════
+//  键盘
+// ════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(D.popup.classList.contains('show')) closePopup();
+    else submitAnswer();
+  }
+});
+D.ansInput.addEventListener('input',e=>{
+  e.target.value=e.target.value.replace(/[^0-9]/g,'');
+});
+
+// ════════════════════════════════════════════
+//  初始化
+// ════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged=()=>{};
+
+  D.startBtn.addEventListener('click',  startGame);
+  D.submitBtn.addEventListener('click', submitAnswer);
+  D.skipBtn.addEventListener('click',   skipProblem);
+  D.hintBtn.addEventListener('click',   showHint);
+  D.speakBtn.addEventListener('click',  speakHint);
+  D.sndBtn.addEventListener('click',    toggleSound);
+  D.restartBtn.addEventListener('click',restartGame);
+  D.mask.addEventListener('click',      closePopup);
+});
+</script>
+</body>
+</html>
