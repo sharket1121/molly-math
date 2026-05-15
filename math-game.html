@@ -9,8 +9,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-        input, textarea { touch-action: auto; }
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            cursor: pointer;
+        }
+        input, textarea {
+            touch-action: auto;
+            -webkit-user-select: text;
+            user-select: text;
+            cursor: text;
+        }
 
         body {
             font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "HanHei SC", sans-serif;
@@ -1134,15 +1146,23 @@
             selectorDiv.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">' +
                 ANIMALS.map((a, i) => `<button class="animal-btn" id="animalBtn${i}" title="${a.label}">${animalHTML(a, 'large')}</button>`).join('') + '</div>';
 
-            // 绑定动物选择
+            // 绑定动物选择（双轨 touchstart + click）
             ANIMALS.forEach(function(a, i) {
                 var btn = document.getElementById('animalBtn' + i);
                 if (btn) {
-                    btn.addEventListener('click', function() {
-                        document.querySelectorAll('.animal-btn').forEach(function(b) { b.classList.remove('selected'); });
-                        btn.classList.add('selected');
-                        pet = a;
-                    });
+                    (function(b) {
+                        var busy = false;
+                        function exec() {
+                            if (busy) return;
+                            busy = true;
+                            setTimeout(function() { busy = false; }, 400);
+                            document.querySelectorAll('.animal-btn').forEach(function(x) { x.classList.remove('selected'); });
+                            b.classList.add('selected');
+                            pet = a;
+                        }
+                        b.addEventListener('touchstart', function(e) { e.preventDefault(); exec(); }, { passive: false });
+                        b.addEventListener('click', function(e) { if (!busy) exec(); });
+                    })(btn);
                 }
             });
 
@@ -1997,16 +2017,34 @@
             } catch(e) {}
         }
 
-        // ============ 事件绑定（腾讯 X5 WebView 兼容性） ============
+        // ============ 事件绑定（腾讯 X5 WebView 兼容性 - 双轨 touch+click） ============
         function bindEvents() {
-            // 统一按钮处理器：只用 click + CSS touch-action 消除300ms延迟
-            // 腾讯 X5 WebView 对 preventDefault/touchstart 有严重兼容性问题
+            // 双轨按钮处理器：touchstart + click 双监听，防止 X5 漏报
+            // touchstart 直接触发，click 兜底；用 busy 标志防重复执行
             function addBtn(id, fn) {
                 var el = document.getElementById(id);
                 if (!el) return;
+                var busy = false;
+
+                function exec() {
+                    if (busy) return;
+                    busy = true;
+                    setTimeout(function() { busy = false; }, 400);
+                    fn();
+                }
+
+                // touchstart：X5 优先触发这个
+                el.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    exec();
+                }, { passive: false });
+
+                // click：桌面浏览器 / 部分 X5 环境兜底
                 el.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    fn();
+                    // 如果 busy 说明 touchstart 已触发过，跳过
+                    if (!busy) exec();
                 });
             }
 
@@ -2039,12 +2077,19 @@
             // 通关页再来一次
             var restartBtn = document.getElementById('restartBtn');
             if (restartBtn) {
-                restartBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    restartBtn.classList.add('touch-active');
-                    setTimeout(function() { restartBtn.classList.remove('touch-active'); }, 150);
-                    restartGame();
-                });
+                (function(btn) {
+                    var busy = false;
+                    function exec() {
+                        if (busy) return;
+                        busy = true;
+                        setTimeout(function() { busy = false; }, 400);
+                        btn.classList.add('touch-active');
+                        setTimeout(function() { btn.classList.remove('touch-active'); }, 150);
+                        restartGame();
+                    }
+                    btn.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    btn.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                })(restartBtn);
             }
 
             // 讲解按钮
@@ -2053,13 +2098,23 @@
             // 音效开关
             var soundBtn = document.getElementById('soundBtn');
             if (soundBtn) {
-                soundBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleSound(); });
+                (function(btn) {
+                    var busy = false;
+                    function exec() { if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); toggleSound(); }
+                    btn.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    btn.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                })(soundBtn);
             }
 
             // 点击遮罩关闭弹窗
             var overlay = document.getElementById('overlay');
             if (overlay) {
-                overlay.addEventListener('click', function(e) { e.stopPropagation(); closePopup(); });
+                (function(el) {
+                    var busy = false;
+                    function exec() { if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); closePopup(); }
+                    el.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    el.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                })(overlay);
             }
 
             // 输入框：过滤非数字 + 回车提交
@@ -2101,8 +2156,9 @@
             try {
                 initAnimals();
                 bindEvents();
+                console.log('[math-game] 初始化完成，事件绑定成功');
             } catch(e) {
-                console.error('初始化错误:', e);
+                console.error('[math-game] 初始化错误:', e);
             }
         }
 
