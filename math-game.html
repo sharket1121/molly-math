@@ -1340,6 +1340,12 @@
         function make(lvl) {
             let a, b, ans, type, name;
 
+            // 安全检查：level 必须在 1-5 范围内
+            if (!lvl || lvl < 1 || lvl > 5) {
+                console.error('[math-game] make() 收到无效的 level:', lvl, '，默认使用 level=1');
+                lvl = 1;
+            }
+
             switch(lvl) {
                 case 1: {
                     if (Math.random() > 0.5) {
@@ -1767,6 +1773,13 @@
         function newProblem() {
             stopVoice();
             problem = make(level);
+            console.log('[math-game] newProblem() 生成题目:', problem);
+            if (!problem || !problem.ans) {
+                console.error('[math-game] 题目生成失败，problem=', problem, 'level=', level);
+                // 兜底：强制使用 level 1
+                level = 1;
+                problem = make(1);
+            }
             steps = explain(problem);
             verticalSteps = [];
 
@@ -1790,6 +1803,12 @@
         }
 
         function submitAnswer() {
+            console.log('[math-game] submitAnswer() problem=', problem);
+            if (!problem || !problem.ans) {
+                console.error('[math-game] 题目未生成，重新生成');
+                newProblem();
+                return;
+            }
             const val = parseInt(document.getElementById('answerInput').value);
             if (isNaN(val)) {
                 document.getElementById('answerInput').classList.add('shake');
