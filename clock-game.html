@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⏰ 茉莉学认钟表 🐱</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #a8edea 0%, #fed6e3 100%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; padding: 15px;
+  }
+  h1 { font-size: 1.8rem; color: #5a4a6a; margin-bottom: 4px; }
+  .subtitle { color: #9a8aaa; font-size: 0.95rem; margin-bottom: 12px; }
+
+  .animal-corner {
+    position: fixed; font-size: 2rem; opacity: 0.35;
+    pointer-events: none; animation: float 4s ease-in-out infinite;
+  }
+  .animal-tl { top: 15px; left: 15px; animation-delay: 0s; }
+  .animal-tr { top: 15px; right: 15px; animation-delay: 1s; }
+  .animal-bl { bottom: 15px; left: 15px; animation-delay: 2s; }
+  .animal-br { bottom: 15px; right: 15px; animation-delay: 0.5s; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .game-area {
+    background: white; border-radius: 24px;
+    padding: 20px 26px;
+    box-shadow: 0 12px 40px rgba(90,74,106,0.15);
+    text-align: center; width: 100%; max-width: 400px;
+  }
+
+  .mascot {
+    font-size: 3rem; height: 55px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 6px;
+  }
+  .mascot.happy { animation: bounce 0.5s ease; }
+  .mascot.sad   { animation: shake 0.4s ease; }
+  .mascot.win   { animation: celebrate 0.6s ease infinite; }
+  @keyframes bounce {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.3) rotate(-8deg); }
+    60% { transform: scale(1.1) rotate(5deg); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  @keyframes celebrate {
+    0%, 100% { transform: rotate(-10deg) scale(1.1); }
+    50% { transform: rotate(10deg) scale(1.1); }
+  }
+
+  /* Mode buttons */
+  .mode-row {
+    display: flex; gap: 8px; justify-content: center;
+    margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .mode-btn {
+    background: #fff3e0; border: 2px solid #ffb74d;
+    padding: 6px 16px; border-radius: 14px;
+    cursor: pointer; font-size: 0.95rem; color: #e65100;
+    font-weight: bold; transition: all 0.2s;
+  }
+  .mode-btn:hover { background: #ffe0b2; }
+  .mode-btn.active { background: #ff9800; color: white; border-color: #ff9800; }
+
+  /* Level buttons */
+  .level-selector {
+    display: flex; gap: 5px; justify-content: center;
+    margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .level-btn {
+    background: #f5f0ff; border: 2px solid transparent;
+    padding: 6px 12px; border-radius: 12px;
+    cursor: pointer; font-size: 0.85rem; color: #7a6a9a;
+    transition: all 0.2s; position: relative;
+  }
+  .level-btn:hover { background: #ede5ff; }
+  .level-btn.active {
+    border-color: #9b7fdf; background: #f0e8ff;
+    color: #6a4aaa; font-weight: bold;
+  }
+  .level-btn.locked { opacity: 0.4; cursor: not-allowed; }
+  .level-btn .streak {
+    position: absolute; top: -6px; right: -6px;
+    background: #ff9800; color: white; font-size: 0.65rem;
+    width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Adaptive bar */
+  .adaptive-info {
+    font-size: 0.75rem; color: #b0a0c0; margin-bottom: 6px;
+  }
+  .adaptive-bar {
+    height: 6px; background: #eee; border-radius: 3px;
+    margin-bottom: 12px; overflow: hidden;
+  }
+  .adaptive-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #a8edea, #b5f5c8);
+    border-radius: 3px; transition: width 0.4s ease;
+  }
+
+  /* Clock */
+  .clock-container {
+    position: relative; width: 260px; height: 260px;
+    margin: 0 auto 12px;
+  }
+  .clock-face {
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, #fffdf5 70%, #fff8e7 100%);
+    border: 6px solid #5a4a6a; border-radius: 50%;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(90,74,106,0.2), inset 0 2px 10px rgba(0,0,0,0.06);
+  }
+  /* Tick: 从表盘内边缘向中心延伸的刻度线，由JS动态设置位置 */
+  .tick {
+    position: absolute;
+    background: #c8b8d8; border-radius: 1px;
+    transform-origin: 0 50%;
+  }
+  .tick.major { background: #5a4a6a; }
+
+  .number {
+    position: absolute; font-size: 1.2rem; font-weight: bold;
+    color: #5a4a6a; width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+
+  .hand {
+    position: absolute; bottom: 50%; left: 50%;
+    transform-origin: 50% 100%; border-radius: 4px;
+    transition: transform 0.6s cubic-bezier(0.4, 2.3, 0.3, 1); z-index: 2;
+  }
+  /* 时针：较粗较短，深紫色，长度70px（到达半径60px处） */
+  .hour-hand {
+    width: 8px; height: 70px; background: #4a3a5a;
+    margin-left: -4px; z-index: 3;
+    border-radius: 4px 4px 0 0;
+  }
+  /* 时针箭头头部 */
+  .hour-hand::after {
+    content: ''; position: absolute;
+    top: -10px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 12px solid #4a3a5a;
+  }
+  /* 分针：较细较长，蓝灰色，长度100px（到达半径30px处，与刻度线重叠） */
+  .minute-hand {
+    width: 5px; height: 100px; background: #6a7a9a;
+    margin-left: -2.5px; z-index: 4;
+    border-radius: 3px 3px 0 0;
+  }
+  /* 分针箭头头部 */
+  .minute-hand::after {
+    content: ''; position: absolute;
+    top: -9px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 10px solid #6a7a9a;
+  }
+  .center-dot {
+    position: absolute; width: 16px; height: 16px;
+    background: #4a3a5a; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5;
+    border: 3px solid #fff8e7;
+  }
+
+  /* Question */
+  .question-box {
+    background: linear-gradient(135deg, #f0e8ff 0%, #ffe0ef 100%);
+    color: #6a4aaa; padding: 10px 18px; border-radius: 14px;
+    font-size: 1.15rem; margin-bottom: 12px;
+    min-height: 46px; display: flex; align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(155,127,223,0.2);
+  }
+
+  /* Options */
+  .options {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin-bottom: 12px;
+  }
+  .option {
+    background: linear-gradient(135deg, #a8edea 0%, #c8e8f5 100%);
+    color: #3a6a7a; border: none; padding: 12px 6px;
+    border-radius: 14px; font-size: 1.15rem; cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 10px rgba(100,200,220,0.3);
+    min-height: 50px; display: flex; align-items: center;
+    justify-content: center;
+  }
+  .option:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(100,200,220,0.4);
+  }
+  .option.correct {
+    background: linear-gradient(135deg, #b5f5c8 0%, #8ee8a0 100%);
+    color: #2a7a3a; animation: pop 0.3s ease;
+  }
+  .option.wrong {
+    background: linear-gradient(135deg, #ffc8d0 0%, #ffa0b0 100%);
+    color: #a03040; animation: shake 0.3s ease;
+  }
+  .option:disabled { cursor: default; }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* Score */
+  .score-board {
+    display: flex; justify-content: center; gap: 40px; margin-bottom: 10px;
+  }
+  .score-item { text-align: center; }
+  .score-label { color: #b0a0c0; font-size: 0.85rem; }
+  .score-value { font-size: 1.7rem; font-weight: bold; }
+  .correct-val { color: #4aba7a; }
+  .wrong-val   { color: #e07080; }
+
+  .btn {
+    background: linear-gradient(135deg, #b5f5c8 0%, #8ee8a0 100%);
+    color: #2a7a3a; border: none; padding: 11px 26px;
+    border-radius: 20px; font-size: 1.05rem; cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 12px rgba(80,200,120,0.35);
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(80,200,120,0.45); }
+  .hint { color: #b0a0c0; font-size: 0.85rem; margin-top: 8px; }
+
+  /* Win overlay */
+  .win-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(90,74,106,0.88); display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    z-index: 300; opacity: 0; pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  .win-overlay.show { opacity: 1; pointer-events: all; }
+  .win-animals { font-size: 3.5rem; margin-bottom: 15px; }
+  .win-title { font-size: 2.5rem; color: white; margin-bottom: 10px; }
+  .win-sub { font-size: 1.2rem; color: #f0e8ff; margin-bottom: 20px; }
+  .win-btn {
+    background: linear-gradient(135deg, #ffd700, #ffb300);
+    color: #5a4a00; border: none; padding: 14px 32px;
+    border-radius: 25px; font-size: 1.1rem; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255,200,0,0.5);
+    transition: transform 0.2s;
+  }
+  .win-btn:hover { transform: scale(1.05); }
+
+  .celebration {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; pointer-events: none; z-index: 200;
+  }
+  .confetti {
+    position: absolute; width: 10px; height: 10px;
+    border-radius: 2px; animation: fall 1.5s ease-out forwards;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-30px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="animal-corner animal-tl">🦋</div>
+<div class="animal-corner animal-tr">🌸</div>
+<div class="animal-corner animal-bl">🐤</div>
+<div class="animal-corner animal-br">🐰</div>
+
+<h1>⏰ 茉莉学认钟表 🐱</h1>
+<p class="subtitle">和猫咪一起学认时间吧</p>
+
+<div class="game-area">
+  <div class="mascot" id="mascot">🐱</div>
+
+  <div class="mode-row">
+    <button class="mode-btn active" id="adaptiveBtn">🚀 闯关模式</button>
+    <button class="mode-btn" id="manualBtn">🎯 自由练习</button>
+  </div>
+
+  <div class="level-selector" id="levelSelector">
+    <button class="level-btn active" data-level="1">整点</button>
+    <button class="level-btn" data-level="2">半时</button>
+    <button class="level-btn" data-level="3">15/45分</button>
+    <button class="level-btn" data-level="4">5的倍数</button>
+    <button class="level-btn" data-level="5">任意分钟</button>
+  </div>
+
+  <div id="adaptiveInfo">
+    <div class="adaptive-info" id="adaptiveInfoText">闯关进度</div>
+    <div class="adaptive-bar">
+      <div class="adaptive-bar-fill" id="adaptiveFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="clock-container">
+    <div class="clock-face" id="clockFace">
+      <div class="center-dot"></div>
+      <div class="hand hour-hand"   id="hourHand"></div>
+      <div class="hand minute-hand" id="minuteHand"></div>
+    </div>
+  </div>
+
+  <div class="question-box" id="questionBox">点击「开始挑战」来学认钟表吧！</div>
+
+  <div class="options" id="optionsArea"></div>
+
+  <button class="btn" id="startBtn">🎯 开始挑战</button>
+
+  <div class="score-board">
+    <div class="score-item">
+      <div class="score-value correct-val" id="correctCount">0</div>
+      <div class="score-label">✅ 正确</div>
+    </div>
+    <div class="score-item">
+      <div class="score-value wrong-val" id="wrongCount">0</div>
+      <div class="score-label">❌ 错误</div>
+    </div>
+  </div>
+
+  <p class="hint" id="hintText">🚀 从整点开始，连续答对5题进入下一关！</p>
+</div>
+
+<div class="win-overlay" id="winOverlay">
+  <div class="win-animals">🎉🐱🌟</div>
+  <div class="win-title">🎊 通关成功！</div>
+  <div class="win-sub">茉莉太厉害啦，全部通关！</div>
+  <button class="win-btn" id="winRestartBtn">🌟 再玩一次</button>
+</div>
+
+<div class="celebration" id="celebration"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  Audio
+// ═══════════════════════════════════════════════════════════════
+let _ac = null;
+function ac() {
+  if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+  return _ac;
+}
+function tone(f, d, t='sine', g=0.25) {
+  try {
+    const ctx = ac(), o = ctx.createOscillator(), g2 = ctx.createGain();
+    o.connect(g2); g2.connect(ctx.destination);
+    o.type = t; o.frequency.value = f;
+    g2.gain.setValueAtTime(g, ctx.currentTime);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + d);
+    o.start(); o.stop(ctx.currentTime + d);
+  } catch(e) {}
+}
+function sfxCorrect() {
+  tone(523,.12); setTimeout(()=>tone(659,.12),100); setTimeout(()=>tone(784,.18),200);
+}
+function sfxWrong() {
+  tone(220,.25,'sawtooth',.15); setTimeout(()=>tone(180,.35,'sawtooth',.12),220);
+}
+function sfxClick() { tone(440,.06,'sine',.08); }
+function sfxLevelUp() {
+  tone(440,.1); setTimeout(()=>tone(554,.1),100); setTimeout(()=>tone(659,.2),200);
+}
+function sfxWin() {
+  [523,659,784,1047,784,1047,1319].forEach((f,i) => setTimeout(()=>tone(f,.2,'sine',.3), i*130));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Constants
+// ═══════════════════════════════════════════════════════════════
+const WIN  = 5;   // 连续对 WIN 次升一级
+const FAIL = 2;   // 连续错 FAIL 次降一级
+const LVLS = 5;
+
+const LNAMES = ['整点','半时','15/45分','5的倍数','任意分钟'];
+const Q = {
+  1:['现在是几点几分？'],
+  2:['现在是几点几分？'],
+  3:['现在是几点几分？'],
+  4:['现在是几点几分？'],
+  5:['现在是几点几分？']
+};
+const HINT = {
+  1:'🌟 看时针指几，就是几点',
+  2:'🌙 分针指向6，就是30分',
+  3:'🕐 分针指向3=15分，指向9=45分',
+  4:'⭐ 数一数分针走过几个格',
+  5:'🔍 先看时针，再看分针'
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════════════
+let G = {
+  mode:         'adaptive',
+  level:        1,
+  streakOK:     0,
+  streakFail:   0,
+  correct:      0,
+  wrong:        0,
+  timeStr:      '',
+  busy:         false,
+  running:      false,
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  DOM refs (resolved after DOMContentLoaded)
+// ═══════════════════════════════════════════════════════════════
+let $;
+function initDOM() {
+  $ = {
+    clockFace:   document.getElementById('clockFace'),
+    hourHand:    document.getElementById('hourHand'),
+    minuteHand:  document.getElementById('minuteHand'),
+    questionBox: document.getElementById('questionBox'),
+    optionsArea: document.getElementById('optionsArea'),
+    startBtn:    document.getElementById('startBtn'),
+    correctEl:   document.getElementById('correctCount'),
+    wrongEl:     document.getElementById('wrongCount'),
+    mascot:      document.getElementById('mascot'),
+    hintText:    document.getElementById('hintText'),
+    celebration:  document.getElementById('celebration'),
+    adaptiveFill:document.getElementById('adaptiveFill'),
+    adaptiveInfoText: document.getElementById('adaptiveInfoText'),
+    adaptiveBtn: document.getElementById('adaptiveBtn'),
+    manualBtn:   document.getElementById('manualBtn'),
+    levelBtns:   document.querySelectorAll('.level-btn'),
+    winOverlay:  document.getElementById('winOverlay'),
+    winRestartBtn: document.getElementById('winRestartBtn'),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Build clock face (once)
+// ═══════════════════════════════════════════════════════════════
+function buildClock() {
+  const face = $.clockFace;
+  // remove everything except center dot and hands
+  face.innerHTML = '';
+  face.appendChild(makeEl('div','center-dot'));
+
+  // 60 ticks: 从表盘内边缘向中心延伸
+  // 表盘260px，border 6px，内半径 = 130 - 6 = 124px
+  // 刻度外端点 = 内边缘(124px)，向内延伸固定长度
+  const CX = 130, CY = 130, R_FACE = 124;
+  const LEN_MINOR = 10, LEN_MAJOR = 14;
+  for (let i = 0; i < 60; i++) {
+    const angleDeg = i * 6;  // 0°, 6°, 12°, ... 354°
+    const angleRad = (angleDeg - 90) * Math.PI / 180;  // -90°: 0°指向正上方(12点)
+    const isMajor = i % 5 === 0;
+    const len = isMajor ? LEN_MAJOR : LEN_MINOR;
+
+    // 外端点 = 表盘内边缘
+    const xOut = CX + R_FACE * Math.cos(angleRad);
+    const yOut = CY + R_FACE * Math.sin(angleRad);
+    // 内端点 = 向内延伸 len 像素
+    const xIn = CX + (R_FACE - len) * Math.cos(angleRad);
+    const yIn = CY + (R_FACE - len) * Math.sin(angleRad);
+
+    const t = makeEl('div', isMajor ? 'tick major' : 'tick minor');
+    const dx = xOut - xIn, dy = yOut - yIn;
+    const rot = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    t.style.left = xIn + 'px';
+    t.style.top = yIn + 'px';
+    t.style.width = len + 'px';
+    t.style.height = isMajor ? '2.5px' : '1.5px';
+    t.style.transform = `rotate(${rot}deg)`;
+    t.style.transformOrigin = '0 50%';
+
+    face.appendChild(t);
+  }
+
+  // Numbers: radius 88 from center (130,130)
+  // 统一角度系统：0°=正上方(12点)，顺时针增加
+  // h=12 → 0°, h=3 → 90°, h=6 → 180°, h=9 → 270°
+  for (let h = 1; h <= 12; h++) {
+    const angleDeg = h * 30;  // 30°, 60°, ..., 360°(=0°)
+    const angleRad = (angleDeg - 90) * Math.PI / 180;
+    const cx = 130, cy = 130, r = 88;
+    const n = makeEl('div', 'number');
+    n.style.left = (cx + r * Math.cos(angleRad) - 18) + 'px';
+    n.style.top  = (cy + r * Math.sin(angleRad) - 18) + 'px';
+    n.textContent = h;
+    face.appendChild(n);
+  }
+
+  // Hands
+  face.appendChild(makeEl('div','hand hour-hand'));
+  face.appendChild(makeEl('div','hand minute-hand'));
+}
+
+function makeEl(tag, cls) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  return e;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Set hands —— 指针角度计算（底层逻辑）
+// ═══════════════════════════════════════════════════════════════
+// 表盘坐标系：0° = 指向12（正上方），顺时针增加
+// 时针：每小时30°（360°/12），每分钟额外0.5°（30°/60）
+// 分针：每分钟6°（360°/60）
+// 例：7:30 → 时针 = 7×30 + 30×0.5 = 225°（7和8正中间）
+//         → 分针 = 30×6 = 180°（指向6）
+// ═══════════════════════════════════════════════════════════════
+function setHands(hour, minute) {
+  const hourDeg   = (hour % 12) * 30 + minute * 0.5;
+  const minuteDeg = minute * 6;
+  const hh = $.clockFace.querySelector('.hour-hand');
+  const mh = $.clockFace.querySelector('.minute-hand');
+  if (hh) hh.style.transform = `rotate(${hourDeg}deg)`;
+  if (mh) mh.style.transform = `rotate(${minuteDeg}deg)`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Time formatting
+// ═══════════════════════════════════════════════════════════════
+function fmt(h, m) {
+  const H = h===0 ? 12 : h;
+  return m===0 ? `${H}点整` : `${H}点${m}分`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Generate time
+// ═══════════════════════════════════════════════════════════════
+function genTime() {
+  const h = Math.floor(Math.random()*12)+1;
+  let m;
+  switch(G.level) {
+    case 1: m=0; break;
+    case 2: m=30; break;
+    case 3: m=Math.random()<0.5?15:45; break;
+    case 4: m=Math.floor(Math.random()*12)*5; break;
+    case 5:
+      const n5=[1,2,3,4,6,7,8,9,11,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49,51,52,53,54,56,57,58,59];
+      m=n5[Math.floor(Math.random()*n5.length)]; break;
+  }
+  return {h,m};
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Generate options
+// ═══════════════════════════════════════════════════════════════
+function genOpts(correct) {
+  const set = new Set([correct]);
+  const getM = () => {
+    if (G.level===1) return 0;
+    if (G.level===2) return 30;
+    if (G.level===3) return Math.random()<0.5?15:45;
+    if (G.level===4) return Math.floor(Math.random()*12)*5;
+    const n5=[1,2,3,4,6,7,8,9,11,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49,51,52,53,54,56,57,58,59];
+    return n5[Math.floor(Math.random()*n5.length)];
+  };
+  while (set.size < 4) set.add(fmt(Math.floor(Math.random()*12)+1, getM()));
+  return [...set].sort(() => Math.random()-0.5);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Update UI
+// ═══════════════════════════════════════════════════════════════
+function updateUI() {
+  // Level buttons
+  $.levelBtns.forEach((btn, i) => {
+    const lv = i+1;
+    const isActive = lv === G.level;
+    const isLocked = G.mode==='adaptive' && lv > G.level;
+    btn.classList.toggle('active', isActive);
+    btn.classList.toggle('locked', isLocked);
+
+    // streak badge
+    const old = btn.querySelector('.streak');
+    if (old) old.remove();
+    if (G.mode==='adaptive' && lv===G.level && G.streakOK>0) {
+      const badge = document.createElement('span');
+      badge.className = 'streak';
+      badge.textContent = G.streakOK;
+      btn.appendChild(badge);
+    }
+  });
+
+  // Adaptive bar
+  const pct = ((G.level-1)*WIN + G.streakOK) / (LVLS*WIN) * 100;
+  $.adaptiveFill.style.width = pct + '%';
+
+  // Adaptive info text
+  if (G.mode==='adaptive') {
+    $.adaptiveInfoText.textContent = `「${LNAMES[G.level-1]}」— 还需 ${WIN-G.streakOK} 次升下一关`;
+  } else {
+    $.adaptiveInfoText.textContent = `当前：「${LNAMES[G.level-1]}」`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Question
+// ═══════════════════════════════════════════════════════════════
+function nextQ() {
+  if (!G.running) return;
+  G.busy = false;
+  $.optionsArea.innerHTML = '';
+
+  const {h,m} = genTime();
+  setHands(h,m);
+  G.timeStr = fmt(h,m);
+
+  const qs = Q[G.level];
+  $.questionBox.textContent = qs[Math.floor(Math.random()*qs.length)];
+  $.hintText.textContent = HINT[G.level];
+  if (G.mode==='adaptive') {
+    $.hintText.textContent += ` 还需${WIN-G.streakOK}次升下一关`;
+  }
+
+  genOpts(G.timeStr).forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = () => checkAns(opt, btn);
+    $.optionsArea.appendChild(btn);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Check answer
+// ═══════════════════════════════════════════════════════════════
+function checkAns(selected, btn) {
+  if (G.busy) return;
+  G.busy = true;
+
+  // Disable all
+  Array.from($.optionsArea.children).forEach(b => b.disabled = true);
+
+  if (selected === G.timeStr) {
+    // CORRECT
+    G.correct++; $.correctEl.textContent = G.correct;
+    G.streakOK++; G.streakFail = 0;
+    btn.classList.add('correct');
+
+    if (G.mode==='adaptive') {
+      if (G.level===LVLS && G.streakOK>=WIN) {
+        // WIN!
+        $.mascot.textContent = '😸🎉'; $.mascot.className = 'mascot win';
+        $.questionBox.textContent = '🎊 通关成功！茉莉太厉害啦！ 🎊';
+        sfxWin(); showConfetti(50);
+        setTimeout(() => $.winOverlay.classList.add('show'), 1000);
+        return;
+      }
+      if (G.streakOK >= WIN) {
+        // Level up
+        G.level++; G.streakOK = 0;
+        sfxLevelUp();
+        $.mascot.textContent = '🦋'; $.mascot.className = 'mascot happy';
+        $.questionBox.textContent = `🌟 太棒了！进入「${LNAMES[G.level-1]}」！`;
+        showConfetti(25);
+        updateUI(); saveState();
+        setTimeout(nextQ, 1500);
+        return;
+      }
+    }
+
+    $.mascot.textContent = '😸'; $.mascot.className = 'mascot happy';
+    $.questionBox.textContent = '🎉 太棒啦！';
+    sfxCorrect(); showConfetti(10);
+    updateUI(); saveState();
+    setTimeout(nextQ, 1300);
+
+  } else {
+    // WRONG
+    G.wrong++; $.wrongEl.textContent = G.wrong;
+    G.streakFail++; G.streakOK = 0;
+    btn.classList.add('wrong');
+    Array.from($.optionsArea.children).forEach(b => {
+      if (b.textContent === G.timeStr) b.classList.add('correct');
+    });
+
+    if (G.mode==='adaptive' && G.level>1 && G.streakFail>=FAIL) {
+      G.level--; G.streakFail = 0; G.streakOK = 0;
+      $.mascot.textContent = '😿'; $.mascot.className = 'mascot sad';
+      $.questionBox.textContent = `没关系，回到「${LNAMES[G.level-1]}」再试试！`;
+    } else {
+      $.mascot.textContent = '😿'; $.mascot.className = 'mascot sad';
+      $.questionBox.textContent = `答对了：是 ${G.timeStr} 哦`;
+    }
+
+    sfxWrong(); updateUI(); saveState();
+    setTimeout(nextQ, 1800);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Mode switch
+// ═══════════════════════════════════════════════════════════════
+function setMode(m) {
+  sfxClick();
+  G.mode = m;
+  $.adaptiveBtn.classList.toggle('active', m==='adaptive');
+  $.manualBtn.classList.toggle('active', m==='manual');
+  $.adaptiveFill.style.display = m==='adaptive' ? 'block' : 'none';
+
+  if (m==='manual') {
+    $.adaptiveInfoText.textContent = `当前：「${LNAMES[G.level-1]}」`;
+    $.levelBtns.forEach(b => b.classList.remove('locked'));
+  } else {
+    $.adaptiveInfoText.textContent = `「${LNAMES[G.level-1]}」— 还需 ${WIN-G.streakOK} 次升下一关`;
+  }
+
+  if (G.running) {
+    G.streakOK = 0; G.streakFail = 0;
+    updateUI();
+  }
+  saveState();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Level click (manual mode)
+// ═══════════════════════════════════════════════════════════════
+function clickLevel(lv) {
+  if (G.mode !== 'manual') return;
+  sfxClick();
+  G.level = lv;
+  G.streakOK = 0; G.streakFail = 0;
+  updateUI();
+  if (G.running) nextQ();
+  saveState();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Start / restart
+// ═══════════════════════════════════════════════════════════════
+function start() {
+  sfxClick();
+  G.running = true;
+  G.correct = G.wrong = G.streakOK = G.streakFail = 0;
+  $.correctEl.textContent = $.wrongEl.textContent = '0';
+  $.mascot.textContent = '🐱'; $.mascot.className = '';
+  $.startBtn.textContent = '🔄 再来一轮';
+  updateUI();
+  nextQ();
+  saveState();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Win restart
+// ═══════════════════════════════════════════════════════════════
+function restartFromWin() {
+  $.winOverlay.classList.remove('show');
+  G.level = 1; G.streakOK = 0; G.streakFail = 0;
+  G.correct = G.wrong = 0;
+  $.correctEl.textContent = $.wrongEl.textContent = '0';
+  $.mascot.textContent = '🐱'; $.mascot.className = '';
+  $.startBtn.textContent = '🔄 再来一轮';
+  G.running = true;
+  updateUI(); nextQ(); saveState();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Confetti
+// ═══════════════════════════════════════════════════════════════
+const CCOORS = ['#f093fb','#e87090','#a8edea','#b5f5c8','#f9ca24','#f8b4d0','#ffd700'];
+function showConfetti(n) {
+  for (let i=0; i<n; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100+'%';
+    c.style.background = CCOORS[Math.floor(Math.random()*CCOORS.length)];
+    c.style.animationDelay = Math.random()*0.5+'s';
+    c.style.width = c.style.height = (6+Math.random()*8)+'px';
+    $.celebration.appendChild(c);
+    setTimeout(()=>c.remove(), 2000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Persistence
+// ═══════════════════════════════════════════════════════════════
+function saveState() {
+  localStorage.setItem('clockMode',  G.mode);
+  localStorage.setItem('clockLevel', G.level);
+}
+function loadState() {
+  const m = localStorage.getItem('clockMode');
+  const l = parseInt(localStorage.getItem('clockLevel'));
+  if (m==='manual') { G.mode='manual'; G.level=l||1; }
+  else               { G.mode='adaptive'; G.level=Math.min(l||1, LVLS); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Bootstrap
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initDOM();
+  buildClock();
+
+  // Restore saved state
+  loadState();
+  $.adaptiveBtn.classList.toggle('active', G.mode==='adaptive');
+  $.manualBtn.classList.toggle('active', G.mode==='manual');
+  $.adaptiveFill.style.display = G.mode==='adaptive' ? 'block' : 'none';
+  if (G.mode==='manual') {
+    $.levelBtns.forEach(b => b.classList.remove('locked'));
+  }
+  updateUI();
+
+  // Events
+  $.adaptiveBtn.addEventListener('click', () => setMode('adaptive'));
+  $.manualBtn.addEventListener('click',   () => setMode('manual'));
+  $.startBtn.addEventListener('click',   () => { if (!G.running) start(); else start(); });
+  $.winRestartBtn.addEventListener('click', restartFromWin);
+
+  $.levelBtns.forEach((btn, i) => {
+    btn.addEventListener('click', () => clickLevel(i+1));
+  });
+});
+</script>
+</body>
+</html>
