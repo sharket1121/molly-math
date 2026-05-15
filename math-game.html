@@ -87,84 +87,16 @@
             background: #faf5ef;
         }
 
-        /* ========== 纯CSS动物头像 ========== */
-        .animal-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: white;
-            position: relative;
-        }
-
-        .animal-icon.panda  { background: #333; }
-        .animal-icon.panda::before { content:''; position:absolute; top:6px; left:7px; width:6px; height:7px; background:white; border-radius:50%; }
-        .animal-icon.panda::after  { content:''; position:absolute; top:6px; right:7px; width:6px; height:7px; background:white; border-radius:50%; }
-
-        .animal-icon.bunny  { background: #f5f0eb; color: #8d8d8d; }
-        .animal-icon.bunny::before { content:''; position:absolute; top:-6px; left:8px; width:5px; height:10px; background:#e0d5cc; border-radius:3px; }
-        .animal-icon.bunny::after  { content:''; position:absolute; top:-6px; right:8px; width:5px; height:10px; background:#e0d5cc; border-radius:3px; }
-
-        .animal-icon.bear   { background: #a1887f; }
-
-        .animal-icon.fox    { background: #ff8a65; }
-        .animal-icon.fox::before { content:''; position:absolute; top:-5px; left:5px; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:8px solid #ff8a65; }
-        .animal-icon.fox::after  { content:''; position:absolute; top:-5px; right:5px; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:8px solid #ff8a65; }
-
-        .animal-icon.koala  { background: #90a4ae; }
-        .animal-icon.koala::before { content:''; position:absolute; top:-3px; left:4px; width:9px; height:9px; background:#b0bec5; border-radius:50% 50% 0 0; }
-        .animal-icon.koala::after  { content:''; position:absolute; top:-3px; right:4px; width:9px; height:9px; background:#b0bec5; border-radius:50% 50% 0 0; }
-
-        /* 大号动物头像 */
-        .animal-icon.large {
-            width: 48px;
-            height: 48px;
-            font-size: 18px;
-        }
-        .animal-icon.large.panda::before  { top:9px; left:11px; width:9px; height:10px; }
-        .animal-icon.large.panda::after   { top:9px; right:11px; width:9px; height:10px; }
-        .animal-icon.large.bunny::before  { top:-8px; left:11px; width:7px; height:14px; border-radius:4px; }
-        .animal-icon.large.bunny::after   { top:-8px; right:11px; width:7px; height:14px; border-radius:4px; }
-        .animal-icon.large.fox::before    { top:-7px; left:7px; border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:10px solid #ff8a65; }
-        .animal-icon.large.fox::after     { top:-7px; right:7px; border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:10px solid #ff8a65; }
-        .animal-icon.large.koala::before  { top:-4px; left:6px; width:12px; height:12px; border-radius:50% 50% 0 0; }
-        .animal-icon.large.koala::after   { top:-4px; right:6px; width:12px; height:12px; border-radius:50% 50% 0 0; }
-
-        .animal-icon.xlarge {
-            width: 64px;
-            height: 64px;
-            font-size: 22px;
-        }
-        .animal-icon.xlarge.panda::before  { top:12px; left:15px; width:10px; height:12px; }
-        .animal-icon.xlarge.panda::after   { top:12px; right:15px; width:10px; height:12px; }
-        .animal-icon.xlarge.bunny::before  { top:-10px; left:14px; width:8px; height:16px; border-radius:5px; }
-        .animal-icon.xlarge.bunny::after   { top:-10px; right:14px; width:8px; height:16px; border-radius:5px; }
-        .animal-icon.xlarge.bear::before   { content:''; position:absolute; top:-4px; left:10px; width:10px; height:8px; background:#8d6e63; border-radius:50%; }
-        .animal-icon.xlarge.bear::after    { content:''; position:absolute; top:-4px; right:10px; width:10px; height:8px; background:#8d6e63; border-radius:50%; }
-        .animal-icon.xlarge.fox::before    { top:-8px; left:9px; border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:12px solid #ff8a65; }
-        .animal-icon.xlarge.fox::after     { top:-8px; right:9px; border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:12px solid #ff8a65; }
-        .animal-icon.xlarge.koala::before  { top:-5px; left:8px; width:14px; height:14px; border-radius:50% 50% 0 0; }
-        .animal-icon.xlarge.koala::after   { top:-5px; right:8px; width:14px; height:14px; border-radius:50% 50% 0 0; }
-
-        .animal-icon.title-size {
-            width: 28px;
-            height: 28px;
-            font-size: 11px;
+        /* ========== 可爱猫咪头像（SVG） ========== */
+        .pet-icon {
             display: inline-block;
             vertical-align: middle;
+            line-height: 1;
         }
-        .animal-icon.title-size.panda::before  { top:5px; left:6px; width:5px; height:5px; }
-        .animal-icon.title-size.panda::after   { top:5px; right:6px; width:5px; height:5px; }
-        .animal-icon.title-size.bunny::before  { top:-4px; left:6px; width:4px; height:8px; border-radius:2px; }
-        .animal-icon.title-size.bunny::after   { top:-4px; right:6px; width:4px; height:8px; border-radius:2px; }
-        .animal-icon.title-size.fox::before    { top:-5px; left:4px; border-left:4px solid transparent; border-right:4px solid transparent; border-bottom:7px solid #ff8a65; }
-        .animal-icon.title-size.fox::after     { top:-5px; right:4px; border-left:4px solid transparent; border-right:4px solid transparent; border-bottom:7px solid #ff8a65; }
-        .animal-icon.title-size.koala::before  { top:-2px; left:3px; width:7px; height:7px; border-radius:50% 50% 0 0; }
-        .animal-icon.title-size.koala::after   { top:-2px; right:3px; width:7px; height:7px; border-radius:50% 50% 0 0; }
+        .pet-icon.small  { width: 28px; height: 28px; }
+        .pet-icon.medium { width: 36px; height: 36px; }
+        .pet-icon.large  { width: 56px; height: 56px; }
+        .pet-icon.xlarge { width: 80px; height: 80px; }
 
         .game-card {
             background: white;
@@ -410,6 +342,11 @@
         @keyframes highlightRow {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.03); background: rgba(255,213,79,0.3); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         .v-row.hightlight-anim {
@@ -1017,19 +954,17 @@
         <div class="start-animals" id="startAnimals"></div>
         <div class="start-title">数学小乐园</div>
         <div class="start-desc">
-            选择你喜欢的小动物<br>
-            和它一起闯关吧！<br>
+            和小猫咪一起闯关吧！<br>
             连续答对5题进入下一关<br>
             连续答错2题回到上一关
         </div>
-        <div class="animal-selector" id="animalSelector"></div>
         <button class="start-btn" id="startBtn">开始闯关 ★</button>
     </div>
 
     <!-- 游戏主体 -->
     <div class="game-body" id="gameBody">
         <div class="header">
-            <div class="title">和<span id="pet"></span>一起学数学</div>
+            <div class="title">和小猫咪一起学数学</div>
             <div class="subtitle">加油哦~</div>
         </div>
 
@@ -1123,58 +1058,59 @@
 
     <script>
         // ============ 动物定义（可爱CSS图标） ============
-        const ANIMALS = [
-            { id: 'panda', label: '熊猫',  color: '#333',    bg: '#fff'    },
-            { id: 'bunny', label: '小兔',  color: '#999',    bg: '#fff0ee' },
-            { id: 'bear',  label: '小熊',  color: '#795548', bg: '#efebe9' },
-            { id: 'fox',   label: '小狐',  color: '#bf360c', bg: '#fff3e0' },
-            { id: 'koala', label: '小考拉', color: '#546e7a', bg: '#eceff1' },
-        ];
+        // 固定小猫咪
+        const CAT = {
+            label: '小猫咪',
+            svg: function(size) {
+                var w = { small: 28, medium: 36, large: 56, xlarge: 80 }[size] || 36;
+                return `<svg class="pet-icon ${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 耳朵 -->
+  <polygon points="6,26 2,4 24,20" fill="#FF9A44"/>
+  <polygon points="58,26 62,4 40,20" fill="#FF9A44"/>
+  <polygon points="9,24 6,8 22,19" fill="#FFCBA4"/>
+  <polygon points="55,24 58,8 42,19" fill="#FFCBA4"/>
+  <!-- 脸部 -->
+  <ellipse cx="32" cy="36" rx="24" ry="22" fill="#FF9A44"/>
+  <!-- 白色脸颊 -->
+  <ellipse cx="32" cy="42" rx="14" ry="10" fill="#FFF3E0"/>
+  <!-- 眼睛 -->
+  <ellipse cx="22" cy="33" rx="4" ry="5" fill="#4A4A4A"/>
+  <ellipse cx="42" cy="33" rx="4" ry="5" fill="#4A4A4A"/>
+  <circle cx="23" cy="31" r="1.5" fill="white"/>
+  <circle cx="43" cy="31" r="1.5" fill="white"/>
+  <!-- 鼻子 -->
+  <ellipse cx="32" cy="40" rx="3" ry="2.2" fill="#FF7043"/>
+  <!-- 嘴巴 -->
+  <path d="M 28 43 Q 32 47 36 43" fill="none" stroke="#FF7043" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 腮红 -->
+  <ellipse cx="14" cy="40" rx="5" ry="3" fill="#FFAB91" opacity="0.6"/>
+  <ellipse cx="50" cy="40" rx="5" ry="3" fill="#FFAB91" opacity="0.6"/>
+  <!-- 胡须 -->
+  <line x1="6" y1="38" x2="18" y2="40" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="6" y1="42" x2="18" y2="43" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="8" y1="46" x2="18" y2="45" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="58" y1="38" x2="46" y2="40" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="58" y1="42" x2="46" y2="43" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="56" y1="46" x2="46" y2="45" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+</svg>`;
+            }
+        };
 
-        // 生成可爱CSS动物图标
+        // 兼容旧接口
         function animalHTML(animal, size) {
-            return `<span class="animal-icon ${size} ${animal.id}" title="${animal.label}"></span>`;
+            if (animal.id === undefined) return CAT.svg(size);
+            return CAT.svg(size);
         }
 
-        // 初始化开始页
+        // 初始化开始页（固定显示一只可爱的猫咪）
         function initAnimals() {
-            // 大头像 + 选择器都用 CSS 图标
             const startDiv = document.getElementById('startAnimals');
-            const selectorDiv = document.getElementById('animalSelector');
-
             startDiv.innerHTML = '<div style="animation:bounce 1s infinite alternate;display:flex;justify-content:center;">' +
-                ANIMALS.map(a => animalHTML(a, 'xlarge')).join('') + '</div>';
-
-            selectorDiv.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">' +
-                ANIMALS.map((a, i) => `<button class="animal-btn" id="animalBtn${i}" title="${a.label}">${animalHTML(a, 'large')}</button>`).join('') + '</div>';
-
-            // 绑定动物选择（双轨 touchstart + click）
-            ANIMALS.forEach(function(a, i) {
-                var btn = document.getElementById('animalBtn' + i);
-                if (btn) {
-                    (function(b) {
-                        var busy = false;
-                        function exec() {
-                            if (busy) return;
-                            busy = true;
-                            setTimeout(function() { busy = false; }, 400);
-                            document.querySelectorAll('.animal-btn').forEach(function(x) { x.classList.remove('selected'); });
-                            b.classList.add('selected');
-                            pet = a;
-                        }
-                        b.addEventListener('touchstart', function(e) { e.preventDefault(); exec(); }, { passive: false });
-                        b.addEventListener('click', function(e) { if (!busy) exec(); });
-                    })(btn);
-                }
-            });
-
-            // 默认选第一个（熊猫）
-            var firstBtn = document.getElementById('animalBtn0');
-            if (firstBtn) firstBtn.classList.add('selected');
+                CAT.svg('xlarge') + '</div>';
         }
 
         // ============ 状态 ============
-        let pet = ANIMALS[0];
+        let pet = CAT;
         let level = 1;
         let score = 0;
         let total = 0;
@@ -1560,8 +1496,19 @@
                     break;
                 }
                 case 'sub1': {
-                    steps.push({ t: `${a} 减 ${b}`, s: '往后数' });
-                    steps.push({ t: `还剩 <span class="r">${ans}</span> 个`, s: '' });
+                    // 例：8-3，把3分成2和1，先8-2=6，再6-1=5
+                    if (a >= b) {
+                        // 直接能减：8-3=5
+                        steps.push({ t: `${a} 减 ${b}`, s: '直接相减' });
+                        steps.push({ t: `${a} - ${b} = <span class="r">${ans}</span>`, s: '' });
+                    } else {
+                        // 需要凑：14-7，把7分成4和3，先14-4=10，再10-3=7
+                        const part1 = a; // 先凑到整十
+                        const part2 = b - a; // 剩下的部分
+                        steps.push({ t: `${a} 减 ${b}`, s: '把' + b + '分成' + part1 + '和' + part2 });
+                        steps.push({ t: `先算 ${a} - ${part1} = ${a - part1}`, s: '' });
+                        steps.push({ t: `再算 ${a - part1} - ${part2} = <span class="r">${ans}</span>`, s: '' });
+                    }
                     break;
                 }
                 case 'add2': {
@@ -1572,9 +1519,21 @@
                     break;
                 }
                 case 'sub2': {
+                    // 例：14-7，把7分成4和3，先14-4=10，再10-3=7
                     const unit = a % 10;
-                    steps.push({ t: `${a} - ${b}`, s: '个位减个位' });
-                    steps.push({ t: `${unit} - ${b} = <span class="r">${ans}</span>`, s: '' });
+                    if (unit >= b) {
+                        // 个位够减：16-4=12，直接减
+                        steps.push({ t: `${a} - ${b}`, s: '个位够减，直接算' });
+                        steps.push({ t: `十位不变：1<br>个位：${unit} - ${b} = ${unit-b}`, s: `答案 <span class="r">${ans}</span>` });
+                    } else {
+                        // 个位不够减，用凑十法
+                        const part1 = unit;      // 先减到整十
+                        const part2 = b - unit;  // 再减剩下的
+                        steps.push({ t: `${a} - ${b}`, s: '个位不够减，用凑十法' });
+                        steps.push({ t: `把 ${b} 分成 ${part1} 和 ${part2}`, s: '' });
+                        steps.push({ t: `先算 ${a} - ${part1} = ${unit + 10}`, s: '' });
+                        steps.push({ t: `再算 ${unit + 10} - ${part2} = <span class="r">${ans}</span>`, s: '' });
+                    }
                     break;
                 }
                 case 'add3': {
@@ -1590,13 +1549,20 @@
                     break;
                 }
                 case 'sub3': {
+                    // 例：18-9，把9分成2和7，先18-2=16，再16-7=9
+                    // 例：15-8，把8分成5和3，先15-5=10，再10-3=7
                     const u = a % 10;
                     if (u >= b) {
-                        steps.push({ t: `${a} - ${b}`, s: '个位够减' });
-                        steps.push({ t: `${u} - ${b} = <span class="r">${ans}</span>`, s: '十位不变' });
+                        // 个位够减
+                        steps.push({ t: `${a} - ${b}`, s: '个位够减，直接算' });
+                        steps.push({ t: `十位不变：1<br>个位：${u} - ${b} = ${u-b}`, s: `答案 <span class="r">${ans}</span>` });
                     } else {
-                        steps.push({ t: `${a} - ${b}`, s: '个位不够减' });
-                        steps.push({ t: `借来1个十，${u}变成${u+10}`, s: `${u+10} - ${b} = <span class="r">${ans}</span>` });
+                        const part1 = u;        // 先减到整十
+                        const part2 = b - u;    // 再减剩下的
+                        steps.push({ t: `${a} - ${b}`, s: '个位不够减，用凑十法' });
+                        steps.push({ t: `把 ${b} 分成 ${part1} 和 ${part2}`, s: '' });
+                        steps.push({ t: `先算 ${a} - ${part1} = ${u + 10}`, s: '' });
+                        steps.push({ t: `再算 ${u + 10} - ${part2} = <span class="r">${ans}</span>`, s: '' });
                     }
                     break;
                 }
@@ -1919,12 +1885,42 @@
             function next() {
                 if (i >= steps.length) return;
                 showStep(i);
-                linVoice(steps[i].t.replace(/<[^>]+>/g,''), () => {
+                // 显示当前步骤文字（大字提示，弥补X5没有语音的不足）
+                showStepHint(i);
+                if (hasSpeech) {
+                    linVoice(steps[i].t.replace(/<[^>]+>/g,''), () => {
+                        i++;
+                        setTimeout(next, 1200);
+                    });
+                } else {
+                    // X5无语音：自动逐步显示，每步停留1.2秒
                     i++;
-                    setTimeout(next, 300);
-                });
+                    setTimeout(next, 1200);
+                }
             }
             next();
+        }
+
+        // 显示讲解步骤的大字提示（弥补X5无语音的不足）
+        function showStepHint(index) {
+            if (!steps[index]) return;
+            var hint = document.getElementById('stepHint');
+            if (!hint) {
+                hint = document.createElement('div');
+                hint.id = 'stepHint';
+                hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FF9A44,#FF7043);color:white;font-size:18px;font-weight:bold;padding:12px 24px;border-radius:30px;box-shadow:0 4px 15px rgba(255,112,67,0.4);z-index:9999;max-width:90%;text-align:center;animation:fadeInUp 0.3s ease;';
+                document.body.appendChild(hint);
+            }
+            // 提取纯文本（去掉HTML标签）
+            var text = steps[index].t.replace(/<[^>]+>/g, '').trim();
+            hint.textContent = text;
+            hint.style.animation = 'none';
+            hint.offsetHeight; // 触发重排以重置动画
+            hint.style.animation = 'fadeInUp 0.3s ease';
+            // 3秒后自动消失
+            setTimeout(function() {
+                if (hint) hint.style.opacity = '0';
+            }, 2500);
         }
 
         function skipProblem() {
@@ -1977,10 +1973,10 @@
             document.getElementById('winScore').textContent = score;
             document.getElementById('winRate').textContent = rate + '%';
 
-            // 渲染通关页动物头像
+            // 渲染通关页猫咪头像
             document.getElementById('winEmoji').innerHTML =
                 '<div style="margin-bottom:15px;animation:bounce 0.6s infinite alternate;display:flex;justify-content:center;">' +
-                animalHTML(pet, 'large') + '</div>';
+                CAT.svg('large') + '</div>';
 
             ding('ok');
             linVoice('太棒了！全部通关！你真是个数学小天才！');
@@ -1989,9 +1985,7 @@
         }
 
         function startGame() {
-            pet = ANIMALS[0]; // 固定熊猫
-
-            document.getElementById('pet').innerHTML = animalHTML(pet, '');
+            pet = CAT; // 固定猫咪
 
             document.getElementById('startPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
@@ -2009,7 +2003,7 @@
             }
             // 微信X5不支持语音合成，直接走兜底（不依赖语音回调）
             const fallbackTimer = setTimeout(safeNext, 300); // 300ms后直接进入
-            linVoice('和' + pet.label + '一起，开始第' + level + '关！', safeNext);
+            linVoice('和小猫咪一起，开始第' + level + '关！', safeNext);
         }
 
         function restartGame() {
@@ -2034,8 +2028,7 @@
         }
 
         function pickAnimal(btn) {
-            document.querySelectorAll('.animal-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
+            // 已简化为固定猫咪，此函数保留但不再使用
         }
 
         // ============ 存档 ============
