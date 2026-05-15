@@ -1271,8 +1271,18 @@
         }
 
         // ============ 林志玲风格语音 ============
+        // 检测浏览器是否支持语音合成（微信X5不支持）
+        var hasSpeech = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+
         function linVoice(text, done) {
             if (!soundOn) { if(done) done(); return; }
+
+            // 微信X5不支持语音合成，直接跳过
+            if (!hasSpeech) {
+                console.log('[math-game] 语音合成不可用，跳过语音:', text);
+                if (done) done();
+                return;
+            }
 
             // 把符号替换成中文文字，避免语音读成"杠"
             const spoken = text
@@ -1316,6 +1326,11 @@
         }
 
         function stopVoice() {
+            if (!hasSpeech) {
+                document.getElementById('speaking').classList.remove('show');
+                isSpeaking = false;
+                return;
+            }
             speechSynthesis.cancel();
             document.getElementById('speaking').classList.remove('show');
             isSpeaking = false;
@@ -2160,8 +2175,8 @@
             }
         });
 
-        // 预加载语音（兼容微信等需要预加载语音的场景）
-        try { speechSynthesis.getVoices(); } catch(e) {}
+        // 预加载语音（仅在有语音合成支持时执行）
+        if (hasSpeech) { try { speechSynthesis.getVoices(); } catch(e) {} }
 
         // ============ 初始化（DOM加载后执行——解决触摸设备不触发问题） ============
         // 初始化 vConsole 移动端调试面板
