@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- vConsole 移动端调试工具 -->
-    <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
+    <!-- 移动端调试工具（生产环境可注释掉）
+    <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script> -->
     <style>
         * {
             margin: 0; padding: 0; box-sizing: border-box;
@@ -2485,13 +2485,6 @@
         if (hasSpeech) { try { speechSynthesis.getVoices(); } catch(e) {} }
 
         // ============ 初始化（DOM加载后执行——解决触摸设备不触发问题） ============
-        // 初始化 vConsole 移动端调试面板
-        var vConsole = new VConsole({
-            defaultPlugins: true,
-            maxLogNumber: 1000,
-        });
-        console.log('[math-game] vConsole 已启用，请在页面底部查看');
-
         function doInit() {
             try {
                 initAnimals();
