@@ -536,14 +536,6 @@
         }
 
         /* 输入区 */
-        .input-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
         .answer-input {
             width: 120px;
             height: 52px;
@@ -599,6 +591,75 @@
         .action-btn:hover {
             border-color: #c49a6c;
             color: #c49a6c;
+        }
+
+        .action-btn.secondary {
+            color: #e57373;
+            border-color: #ffcdd2;
+        }
+        .action-btn.secondary:hover {
+            border-color: #e57373;
+            color: #e57373;
+            background: #fff5f5;
+        }
+
+        /* 输入框点击区域 */
+        .input-row {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .input-click-area {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1;
+            cursor: text;
+        }
+        .input-click-area:active { cursor: text; }
+        .answer-input {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 难度快捷选择 */
+        .level-quick-select {
+            margin-top: 12px;
+            padding: 12px 15px;
+            background: #faf5ef;
+            border-radius: 12px;
+            border: 1px dashed #e8e0d8;
+        }
+        .level-quick-select.hidden { display: none; }
+        .level-quick-label {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .level-quick-btns {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .level-quick-btn {
+            padding: 5px 10px;
+            border: 1px solid #e8e0d8;
+            border-radius: 15px;
+            background: white;
+            font-size: 11px;
+            color: #8d8d8d;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .level-quick-btn:hover,
+        .level-quick-btn.active {
+            border-color: #c49a6c;
+            color: #c49a6c;
+            background: #faf5ef;
         }
 
         /* 进度条 */
@@ -1036,7 +1097,8 @@
             </div>
 
             <!-- 输入 -->
-            <div class="input-row">
+            <div class="input-row" id="inputRow">
+                <div class="input-click-area" id="inputClickArea"></div>
                 <input type="text" inputmode="numeric" enterkeyhint="done"
                        class="answer-input" id="answerInput"
                        placeholder="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -1044,8 +1106,21 @@
             </div>
 
             <div class="action-row">
+                <button class="action-btn secondary" id="restartMidBtn">重新开始</button>
                 <button class="action-btn" id="skipBtn">跳过此题 ▸</button>
                 <button class="action-btn" id="showSolBtn">看方法</button>
+            </div>
+
+            <!-- 难度快捷选择（答题过程中可见） -->
+            <div class="level-quick-select hidden" id="levelQuickSelect">
+                <div class="level-quick-label">切换难度：</div>
+                <div class="level-quick-btns">
+                    <button class="level-quick-btn" data-level="1">第1关</button>
+                    <button class="level-quick-btn" data-level="2">第2关</button>
+                    <button class="level-quick-btn" data-level="3">第3关</button>
+                    <button class="level-quick-btn" data-level="4">第4关</button>
+                    <button class="level-quick-btn" data-level="5">第5关</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2130,6 +2205,11 @@
             document.getElementById('startPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
 
+            // 显示难度快捷选择
+            var levelQuick = document.getElementById('levelQuickSelect');
+            if (levelQuick) levelQuick.classList.remove('hidden');
+            updateLevelQuickHighlight();
+
             loadProgress();
             renderTrack();
 
@@ -2146,12 +2226,23 @@
             linVoice('和小猫咪一起，开始第' + level + '关！', safeNext);
         }
 
+        function updateLevelQuickHighlight() {
+            document.querySelectorAll('.level-quick-btn').forEach(function(b) {
+                b.classList.toggle('active', parseInt(b.getAttribute('data-level')) === level);
+            });
+        }
+
         function restartGame() {
             level = 1; score = 0; total = 0; correct = 0;
             winStreak = 0; loseStreak = 0;
 
             document.getElementById('winPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
+
+            // 显示难度快捷选择
+            var levelQuick = document.getElementById('levelQuickSelect');
+            if (levelQuick) levelQuick.classList.remove('hidden');
+            updateLevelQuickHighlight();
 
             renderTrack();
 
@@ -2254,24 +2345,72 @@
             // 看方法按钮
             addBtn('showSolBtn', showSolution);
 
-            // 通关页再来一次
-            var restartBtn = document.getElementById('restartBtn');
-            if (restartBtn) {
-                (function(btn) {
-                    var busy = false;
-                    function exec() {
-                        if (busy) return;
-                        busy = true;
-                        setTimeout(function() { busy = false; }, 400);
-                        console.log('[math-game] restartBtn 被触发');
-                        btn.classList.add('touch-active');
-                        setTimeout(function() { btn.classList.remove('touch-active'); }, 150);
-                        restartGame();
+            // 通关页再来一次 - 使用统一的 addBtn（更可靠）
+            addBtn('restartBtn', function() {
+                restartGame();
+            });
+
+            // 答题过程中重新开始按钮
+            addBtn('restartMidBtn', function() {
+                if (confirm('确定要重新开始吗？')) {
+                    restartGame();
+                }
+            });
+
+            // 输入框点击区域 - 点击时聚焦到输入框
+            var inputClickArea = document.getElementById('inputClickArea');
+            if (inputClickArea) {
+                inputClickArea.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    var inp = document.getElementById('answerInput');
+                    if (inp) {
+                        inp.focus();
+                        // 尝试显示键盘
+                        if (inp.showPicker) inp.showPicker();
+                        else if (inp.createTextRange) {
+                            var range = inp.createTextRange();
+                            range.moveEnd('character', inp.value.length);
+                            range.select();
+                        }
                     }
-                    btn.addEventListener('touchstart', function(e) { console.log('[math-game] restartBtn touchstart'); e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
-                    btn.addEventListener('click', function(e) { console.log('[math-game] restartBtn click'); e.stopPropagation(); if (!busy) exec(); });
-                })(restartBtn);
+                }, { passive: false });
+                inputClickArea.addEventListener('click', function(e) {
+                    var inp = document.getElementById('answerInput');
+                    if (inp) inp.focus();
+                });
             }
+
+            // 难度快捷选择按钮
+            document.querySelectorAll('.level-quick-btn').forEach(function(btn) {
+                btn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var targetLevel = parseInt(this.getAttribute('data-level'));
+                    if (!isNaN(targetLevel) && targetLevel >= 1 && targetLevel <= 5) {
+                        level = targetLevel;
+                        winStreak = 0;
+                        loseStreak = 0;
+                        renderTrack();
+                        newProblem();
+                        // 更新按钮高亮
+                        document.querySelectorAll('.level-quick-btn').forEach(function(b) { b.classList.remove('active'); });
+                        this.classList.add('active');
+                    }
+                }, { passive: false });
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var targetLevel = parseInt(this.getAttribute('data-level'));
+                    if (!isNaN(targetLevel) && targetLevel >= 1 && targetLevel <= 5) {
+                        level = targetLevel;
+                        winStreak = 0;
+                        loseStreak = 0;
+                        renderTrack();
+                        newProblem();
+                        document.querySelectorAll('.level-quick-btn').forEach(function(b) { b.classList.remove('active'); });
+                        this.classList.add('active');
+                    }
+                });
+            });
 
             // 讲解按钮
             addBtn('speakBtn2', speakAll);
