@@ -614,7 +614,10 @@
         }
         .input-click-area {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            /* 只覆盖输入框，不覆盖回答按钮 */
+            left: 0;
+            width: calc(120px + 12px + 24px); /* 输入框+gap+padding */
+            top: 0; bottom: 0;
             z-index: 1;
             cursor: text;
         }
@@ -622,6 +625,10 @@
         .answer-input {
             position: relative;
             z-index: 2;
+        }
+        .submit-btn {
+            position: relative;
+            z-index: 3; /* 确保按钮在点击区域之上 */
         }
 
         /* 难度快捷选择 */
@@ -2290,6 +2297,7 @@
                     return;
                 }
                 var busy = false;
+                var touched = false; // 追踪是否刚触发过 touch
 
                 function exec() {
                     if (busy) {
@@ -2297,7 +2305,8 @@
                         return;
                     }
                     busy = true;
-                    setTimeout(function() { busy = false; }, 400);
+                    touched = true;
+                    setTimeout(function() { busy = false; touched = false; }, 400);
                     console.log('[math-game] 按钮 ' + id + ' 被触发');
                     fn();
                 }
@@ -2311,11 +2320,15 @@
                 }, { passive: false });
 
                 // click：桌面浏览器 / 部分 X5 环境兜底
+                // 只有当没有刚触发过 touch 时才执行（避免 touch 和 click 重复执行）
                 el.addEventListener('click', function(e) {
-                    console.log('[math-game] click 触发:', id);
+                    console.log('[math-game] click 触发:', id, 'touched=', touched);
                     e.stopPropagation();
-                    // 如果 busy 说明 touchstart 已触发过，跳过
-                    if (!busy) exec();
+                    // touched=true 说明 touchstart 已触发并执行了，这里跳过
+                    // touched=false 说明没有 touchstart，直接执行
+                    if (!touched && !busy) {
+                        exec();
+                    }
                 });
             }
 
