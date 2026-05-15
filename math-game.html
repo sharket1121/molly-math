@@ -1013,7 +1013,9 @@
                     <div class="v-row" id="vLineRow"><div class="v-line" id="vLine"></div></div>
                     <!-- 第4行：计算过程（借位标记 or 中间结果）（动画第3步填入） -->
                     <div class="v-row" id="vResultRow"></div>
-                    <!-- 第5行：最终答案（动画第4步填入） -->
+                    <!-- 第4.5行：答案上方的横线（动画插入） -->
+                    <div class="v-row"><div class="v-line" id="vLine2" style="width:80px;opacity:0;transition:opacity 0.3s;"></div></div>
+                    <!-- 第5行：最终答案（动画最后一步填入） -->
                     <div class="v-row" id="vAnsRow"></div>
                 </div>
 
@@ -1426,6 +1428,24 @@
             const b1 = Math.floor(b / 10), b0 = b % 10;
             const isAdd = type.startsWith('add');
 
+            // 计算对齐缩进（根据被加/被减数的位数，让上下数字右对齐）
+            const aLen = String(a).length;
+            const bLen = String(b).length;
+            // 被加/被减数上方缩进（操作数位数不足时补空格，右对齐）
+            function alignTop(num) {
+                const nLen = String(num).length;
+                const pad = aLen - nLen;
+                return pad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(pad) : '';
+            }
+            // 加/减数上方缩进（操作数位数不足时补空格，配合符号右对齐）
+            function alignBottom(num) {
+                const nLen = String(num).length;
+                // 符号+数字 整体右对齐到被加数宽度
+                // 符号占约1个字符宽度，数字右端对齐
+                const totalPad = aLen - nLen;
+                return totalPad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(totalPad) : '';
+            }
+
             const steps = [];
 
             if (isAdd) {
@@ -1433,34 +1453,35 @@
                 const sum0 = a0 + b0;
                 const sum1 = a1 + b1 + (carry ? 1 : 0);
 
+                // 第1行：被加数 a（在上，不带符号，右对齐）
                 steps.push({
                     row: 0,
-                    content: `<span class="v-op">+</span><span class="v-num"><span class="digit appear">${b}</span></span>`,
-                    highlight: false,
-                    voice: `${b}`
-                });
-
-                steps.push({
-                    row: 1,
-                    content: `<span style="width:36px"></span><span class="v-num"><span class="digit appear">${a}</span></span>`,
+                    content: `<span class="v-num"><span class="digit appear">${a}</span></span>`,
                     highlight: false,
                     voice: `${a}`
                 });
 
+                // 第2行：加号 + 加数 b（右对齐）
                 steps.push({
-                    row: 'line',
-                    content: '',
+                    row: 1,
+                    content: `<span class="v-op">+</span>${alignBottom(b)}<span class="v-num"><span class="digit appear">${b}</span></span>`,
                     highlight: false,
-                    voice: ''
+                    voice: `加${b}`
                 });
 
+                // 第3行：横线
+                steps.push({ row: 'line', content: '', highlight: false, voice: '' });
+
                 if (carry) {
+                    // 进位：先显示进位标记+个位和，再显示完整答案
                     steps.push({
                         row: 2,
                         content: `<span class="v-num"><span class="digit carry appear">1</span><span class="digit">${sum0}</span></span>`,
                         highlight: true,
                         voice: `${a0}加${b0}等于${sum0}，满十进一`
                     });
+                    // 答案上方的横线
+                    steps.push({ row: 'line2', content: '', highlight: false, voice: '' });
                     steps.push({
                         row: 3,
                         content: `<span class="v-result appear">${ans}</span>`,
@@ -1474,6 +1495,8 @@
                         highlight: true,
                         voice: `${a0}加${b0}等于${sum0}`
                     });
+                    // 答案上方的横线
+                    steps.push({ row: 'line2', content: '', highlight: false, voice: '' });
                     steps.push({
                         row: 3,
                         content: `<span class="v-result appear">${ans}</span>`,
@@ -1482,14 +1505,12 @@
                     });
                 }
             } else {
-                // 减法：竖式第1行=被减数a（在上），第2行=减数b（在下）
+                // 减法：竖式第1行=被减数a（在上），第2行=减数b（在下带符号）
                 const borrow = a0 < b0;
-                // 借位后新的个位（被减数个位+10）
                 const borrowed0 = a0 + 10;
-                // 借位后十位（被减数十位-1）
                 const borrowed1 = a1 - 1;
 
-                // 竖式第1步：显示被减数 a（在上面，不带符号）
+                // 第1行：被减数 a（不带符号，右对齐）
                 steps.push({
                     row: 0,
                     content: `<span class="v-num"><span class="digit appear">${a}</span></span>`,
@@ -1497,30 +1518,26 @@
                     voice: `${a}`
                 });
 
-                // 竖式第2步：减号写在减数 b 前面
+                // 第2行：减号 + 减数 b（右对齐）
                 steps.push({
                     row: 1,
-                    content: `<span class="v-op">\u2212</span><span class="v-num"><span class="digit appear">${b}</span></span>`,
+                    content: `<span class="v-op">\u2212</span>${alignBottom(b)}<span class="v-num"><span class="digit appear">${b}</span></span>`,
                     highlight: false,
                     voice: `减${b}`
                 });
 
-                // 竖式第3步：画线
-                steps.push({
-                    row: 'line',
-                    content: '',
-                    highlight: false,
-                    voice: ''
-                });
+                // 第3步：横线
+                steps.push({ row: 'line', content: '', highlight: false, voice: '' });
 
                 if (borrow) {
-                    // 借位竖式：第4步显示借位标记（个小数点），第5步显示答案
                     steps.push({
                         row: 2,
                         content: `<span class="v-num"><span class="digit borrow appear">\u00B7</span><span class="digit">${a0}</span></span>`,
                         highlight: true,
                         voice: `${a0}不够减${b0}，从十位借一当十，十位${a1}变成${borrowed1}，个位${borrowed0}减${b0}等于${borrowed0-b0}`
                     });
+                    // 答案上方的横线
+                    steps.push({ row: 'line2', content: '', highlight: false, voice: '' });
                     steps.push({
                         row: 3,
                         content: `<span class="v-result appear">${ans}</span>`,
@@ -1528,13 +1545,14 @@
                         voice: `答案是${ans}`
                     });
                 } else {
-                    // 不需要借位
                     steps.push({
                         row: 2,
                         content: `<span class="v-num"><span class="digit">${a0-b0}</span></span>`,
                         highlight: true,
                         voice: `个位${a0}减${b0}等于${a0-b0}`
                     });
+                    // 答案上方的横线
+                    steps.push({ row: 'line2', content: '', highlight: false, voice: '' });
                     steps.push({
                         row: 3,
                         content: `<span class="v-result appear">${ans}</span>`,
@@ -1733,6 +1751,8 @@
 
             const line = document.getElementById('vLine');
             if (line) line.classList.remove('show');
+            const line2 = document.getElementById('vLine2');
+            if (line2) line2.style.opacity = '0';
         }
 
         let _animTimer = null;
@@ -1764,6 +1784,14 @@
                         if (line) line.classList.add('show');
                         stepIdx++;
                         _animTimer = setTimeout(showNextStep, 500);
+                        return;
+                    }
+
+                    if (step.row === 'line2') {
+                        const line2 = document.getElementById('vLine2');
+                        if (line2) { line2.style.opacity = '1'; }
+                        stepIdx++;
+                        _animTimer = setTimeout(showNextStep, 400);
                         return;
                     }
 
