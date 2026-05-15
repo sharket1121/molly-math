@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- vConsole 移动端调试工具 -->
+    <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
     <style>
         * {
             margin: 0; padding: 0; box-sizing: border-box;
@@ -2023,18 +2025,26 @@
             // touchstart 直接触发，click 兜底；用 busy 标志防重复执行
             function addBtn(id, fn) {
                 var el = document.getElementById(id);
-                if (!el) return;
+                if (!el) {
+                    console.error('[math-game] 按钮未找到:', id);
+                    return;
+                }
                 var busy = false;
 
                 function exec() {
-                    if (busy) return;
+                    if (busy) {
+                        console.log('[math-game] 按钮 ' + id + ' 被跳过（busy）');
+                        return;
+                    }
                     busy = true;
                     setTimeout(function() { busy = false; }, 400);
+                    console.log('[math-game] 按钮 ' + id + ' 被触发');
                     fn();
                 }
 
                 // touchstart：X5 优先触发这个
                 el.addEventListener('touchstart', function(e) {
+                    console.log('[math-game] touchstart 触发:', id);
                     e.preventDefault();
                     e.stopPropagation();
                     exec();
@@ -2042,6 +2052,7 @@
 
                 // click：桌面浏览器 / 部分 X5 环境兜底
                 el.addEventListener('click', function(e) {
+                    console.log('[math-game] click 触发:', id);
                     e.stopPropagation();
                     // 如果 busy 说明 touchstart 已触发过，跳过
                     if (!busy) exec();
@@ -2083,12 +2094,13 @@
                         if (busy) return;
                         busy = true;
                         setTimeout(function() { busy = false; }, 400);
+                        console.log('[math-game] restartBtn 被触发');
                         btn.classList.add('touch-active');
                         setTimeout(function() { btn.classList.remove('touch-active'); }, 150);
                         restartGame();
                     }
-                    btn.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
-                    btn.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                    btn.addEventListener('touchstart', function(e) { console.log('[math-game] restartBtn touchstart'); e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    btn.addEventListener('click', function(e) { console.log('[math-game] restartBtn click'); e.stopPropagation(); if (!busy) exec(); });
                 })(restartBtn);
             }
 
@@ -2100,9 +2112,9 @@
             if (soundBtn) {
                 (function(btn) {
                     var busy = false;
-                    function exec() { if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); toggleSound(); }
-                    btn.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
-                    btn.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                    function exec() { console.log('[math-game] soundBtn 被触发'); if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); toggleSound(); }
+                    btn.addEventListener('touchstart', function(e) { console.log('[math-game] soundBtn touchstart'); e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    btn.addEventListener('click', function(e) { console.log('[math-game] soundBtn click'); e.stopPropagation(); if (!busy) exec(); });
                 })(soundBtn);
             }
 
@@ -2152,6 +2164,13 @@
         try { speechSynthesis.getVoices(); } catch(e) {}
 
         // ============ 初始化（DOM加载后执行——解决触摸设备不触发问题） ============
+        // 初始化 vConsole 移动端调试面板
+        var vConsole = new VConsole({
+            defaultPlugins: true,
+            maxLogNumber: 1000,
+        });
+        console.log('[math-game] vConsole 已启用，请在页面底部查看');
+
         function doInit() {
             try {
                 initAnimals();
