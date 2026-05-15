@@ -381,6 +381,11 @@
             margin-left: 5px;
         }
 
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to   { transform: translateY(-8px); }
+        }
+
         @keyframes popIn {
             0% { transform: scale(0); opacity: 0; }
             70% { transform: scale(1.2); }
@@ -1102,31 +1107,47 @@
     </div>
 
     <script>
-        // ============ 动物定义（纯CSS图标，无emoji） ============
+        // ============ 动物定义（可爱CSS图标） ============
         const ANIMALS = [
-            { id: 'panda', label: '熊猫', color: '#333', bg: '#f5f5f5', eyes: '● ●' }
+            { id: 'panda', label: '熊猫',  color: '#333',    bg: '#fff'    },
+            { id: 'bunny', label: '小兔',  color: '#999',    bg: '#fff0ee' },
+            { id: 'bear',  label: '小熊',  color: '#795548', bg: '#efebe9' },
+            { id: 'fox',   label: '小狐',  color: '#bf360c', bg: '#fff3e0' },
+            { id: 'koala', label: '小考拉', color: '#546e7a', bg: '#eceff1' },
         ];
 
-        // 生成动物CSS图标HTML（纯色圆形带眼睛图案）
+        // 生成可爱CSS动物图标
         function animalHTML(animal, size) {
-            const eyes = animal.eyes || '● ●';
-            return `<span style="
-                display:inline-flex; align-items:center; justify-content:center;
-                width:${size==='large'?'52':'30'}px; height:${size==='large'?'52':'30'}px;
-                border-radius:50%; background:${animal.bg}; color:${animal.color};
-                font-size:${size==='large'?'13':'9'}px; font-weight:bold;
-                border:2px solid ${animal.color};
-                box-sizing:border-box; letter-spacing:-1px;
-            ">${eyes}</span>`;
+            return `<span class="animal-icon ${size} ${animal.id}" title="${animal.label}"></span>`;
         }
 
-        // 初始化开始页：只展示一个动物
+        // 初始化开始页
         function initAnimals() {
+            // 大头像 + 选择器都用 CSS 图标
             const startDiv = document.getElementById('startAnimals');
-            startDiv.innerHTML = animalHTML(ANIMALS[0], 'large');
-
             const selectorDiv = document.getElementById('animalSelector');
-            selectorDiv.innerHTML = `<div style="text-align:center; font-size:14px; color:#999;">${animalHTML(ANIMALS[0])} 熊猫</div>`;
+
+            startDiv.innerHTML = '<div style="animation:bounce 1s infinite alternate;display:flex;justify-content:center;">' +
+                ANIMALS.map(a => animalHTML(a, 'xlarge')).join('') + '</div>';
+
+            selectorDiv.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">' +
+                ANIMALS.map((a, i) => `<button class="animal-btn" id="animalBtn${i}" title="${a.label}">${animalHTML(a, 'large')}</button>`).join('') + '</div>';
+
+            // 绑定动物选择
+            ANIMALS.forEach(function(a, i) {
+                var btn = document.getElementById('animalBtn' + i);
+                if (btn) {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.animal-btn').forEach(function(b) { b.classList.remove('selected'); });
+                        btn.classList.add('selected');
+                        pet = a;
+                    });
+                }
+            });
+
+            // 默认选第一个（熊猫）
+            var firstBtn = document.getElementById('animalBtn0');
+            if (firstBtn) firstBtn.classList.add('selected');
         }
 
         // ============ 状态 ============
@@ -2076,24 +2097,23 @@
         // 预加载语音（兼容微信等需要预加载语音的场景）
         try { speechSynthesis.getVoices(); } catch(e) {}
 
-        // ============ 立即初始化（微信 WKWebView 兼容性 + DOMContentLoaded 双保险） ============
-        (function initOnLoad() {
+        // ============ 初始化（DOM加载后执行——解决触摸设备不触发问题） ============
+        function doInit() {
             try {
                 initAnimals();
                 bindEvents();
             } catch(e) {
                 console.error('初始化错误:', e);
-                alert('游戏加载失败，请刷新重试');
             }
-        })();
+        }
 
-        // 备用：如果 IIFE 执行时 DOM 未就绪（比如某些极端情况），DOMContentLoaded 再尝试
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                initAnimals();
-                bindEvents();
-            } catch(e) { console.error('DOMContentLoaded 初始化错误:', e); }
-        });
+        // 优先用 DOMContentLoaded（最可靠）
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', doInit);
+        } else {
+            // DOM 已就绪（脚本在 </body> 前所以基本走这条）
+            doInit();
+        }
     </script>
 </body>
 </html>
