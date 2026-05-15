@@ -1988,7 +1988,8 @@
                 clearTimeout(fallbackTimer);
                 newProblem();
             }
-            const fallbackTimer = setTimeout(safeNext, 2000); // 2秒兜底
+            // 微信X5不支持语音合成，直接走兜底（不依赖语音回调）
+            const fallbackTimer = setTimeout(safeNext, 300); // 300ms后直接进入
             linVoice('和' + pet.label + '一起，开始第' + level + '关！', safeNext);
         }
 
@@ -2008,7 +2009,8 @@
                 clearTimeout(fallbackTimer);
                 newProblem();
             }
-            const fallbackTimer = setTimeout(safeNext, 2000);
+            // 微信X5不支持语音合成，直接走兜底
+            const fallbackTimer = setTimeout(safeNext, 300);
             linVoice('重新开始！第1关！', safeNext);
         }
 
