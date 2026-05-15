@@ -9,7 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        input, textarea { touch-action: auto; }
 
         body {
             font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "HanHei SC", sans-serif;
@@ -1996,102 +1997,100 @@
             } catch(e) {}
         }
 
-        // ============ 事件绑定（统一用函数，微信 WKWebView 兼容性核心） ============
-        // ============ 事件绑定（微信 WKWebView 兼容性核心） ============
+        // ============ 事件绑定（腾讯 X5 WebView 兼容性） ============
         function bindEvents() {
-            // 检测是否为触摸设备（微信/移动端）
-            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-            const startEvent = isTouchDevice ? 'touchstart' : 'click';
-            const endEvent   = isTouchDevice ? 'touchend'   : 'click';
-
-            // 统一按钮处理器：触摸设备用 touchstart，非触摸用 click
-            function makeHandler(fn) {
-                return function(e) {
-                    e.preventDefault();
+            // 统一按钮处理器：只用 click + CSS touch-action 消除300ms延迟
+            // 腾讯 X5 WebView 对 preventDefault/touchstart 有严重兼容性问题
+            function addBtn(id, fn) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('click', function(e) {
                     e.stopPropagation();
                     fn();
-                };
+                });
             }
 
-            // 触摸设备上：首次触摸激活 AudioContext（必须在用户手势内调用）
-            if (isTouchDevice) {
-                document.addEventListener('touchstart', function initAudioOnce() {
+            // 触摸设备上：首次触摸激活 AudioContext
+            var audioInited = false;
+            document.addEventListener('touchstart', function() {
+                if (!audioInited) {
+                    audioInited = true;
                     initAudio();
-                    document.removeEventListener('touchstart', initAudioOnce, { passive: true });
-                }, { passive: true });
-            }
+                }
+            }, { passive: true });
 
             // 开始按钮
-            const startBtn = document.getElementById('startBtn');
-            startBtn.addEventListener(startEvent, makeHandler(function() {
-                startBtn.classList.add('touch-active');
-                setTimeout(function() { startBtn.classList.remove('touch-active'); }, 150);
+            addBtn('startBtn', function() {
+                var btn = document.getElementById('startBtn');
+                btn.classList.add('touch-active');
+                setTimeout(function() { btn.classList.remove('touch-active'); }, 150);
                 startGame();
-            }), { passive: false });
+            });
 
             // 回答按钮
-            document.getElementById('submitBtn').addEventListener(startEvent, makeHandler(submitAnswer), { passive: false });
+            addBtn('submitBtn', submitAnswer);
 
             // 跳过按钮
-            document.getElementById('skipBtn').addEventListener(startEvent, makeHandler(skipProblem), { passive: false });
+            addBtn('skipBtn', skipProblem);
 
             // 看方法按钮
-            document.getElementById('showSolBtn').addEventListener(startEvent, makeHandler(showSolution), { passive: false });
+            addBtn('showSolBtn', showSolution);
 
             // 通关页再来一次
             var restartBtn = document.getElementById('restartBtn');
             if (restartBtn) {
-                restartBtn.addEventListener(startEvent, makeHandler(function() {
+                restartBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     restartBtn.classList.add('touch-active');
                     setTimeout(function() { restartBtn.classList.remove('touch-active'); }, 150);
                     restartGame();
-                }), { passive: false });
+                });
             }
 
-            // 讲解按钮（先隐藏，等用户点击"看方法"后再绑定或显示）
-            var speakBtn2 = document.getElementById('speakBtn2');
-            if (speakBtn2) {
-                speakBtn2.addEventListener(startEvent, makeHandler(speakAll), { passive: false });
-            }
+            // 讲解按钮
+            addBtn('speakBtn2', speakAll);
 
-            // 音效开关（始终监听 click，阻止冒泡避免误触）
+            // 音效开关
             var soundBtn = document.getElementById('soundBtn');
-            soundBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleSound(); });
+            if (soundBtn) {
+                soundBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleSound(); });
+            }
 
             // 点击遮罩关闭弹窗
             var overlay = document.getElementById('overlay');
-            overlay.addEventListener(startEvent, makeHandler(closePopup), { passive: false });
-            overlay.addEventListener('click', function(e) { e.stopPropagation(); });
-
-            // 输入框：回车键提交（触摸设备额外自动聚焦）
-            var answerInput = document.getElementById('answerInput');
-            function handleInputKey(e) {
-                if (e.key === 'Enter' || e.keyCode === 13) {
-                    e.preventDefault();
-                    submitAnswer();
-                }
+            if (overlay) {
+                overlay.addEventListener('click', function(e) { e.stopPropagation(); closePopup(); });
             }
-            answerInput.addEventListener('keydown', handleInputKey);
-            if (isTouchDevice) {
-                answerInput.addEventListener('touchstart', function(e) {
+
+            // 输入框：过滤非数字 + 回车提交
+            var answerInput = document.getElementById('answerInput');
+            if (answerInput) {
+                answerInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/[^0-9-]/g, '');
+                });
+                answerInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        submitAnswer();
+                    }
+                });
+                // 触摸设备点击输入框时主动聚焦（腾讯X5兼容性）
+                answerInput.addEventListener('click', function() {
                     setTimeout(function() { answerInput.focus(); }, 10);
-                }, { passive: true });
+                });
+                // 兼容 inputmode numeric（部分腾讯浏览器不支持）
+                // 不强制用 number 类型，防止华为等机器弹出符号键盘
             }
         }
 
-        // ============ 键盘 ============
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
+        // 全局回车键：关闭弹窗或提交答案
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
                 if (document.getElementById('popup').classList.contains('show')) {
                     closePopup();
-                } else if (document.getElementById('answerInput').value) {
+                } else if (document.getElementById('answerInput') && document.getElementById('answerInput').value) {
                     submitAnswer();
                 }
             }
-        });
-
-        document.getElementById('answerInput').addEventListener('input', e => {
-            e.target.value = e.target.value.replace(/[^0-9-]/g, '');
         });
 
         // 预加载语音（兼容微信等需要预加载语音的场景）
