@@ -1417,27 +1417,27 @@
                     });
                 }
             } else {
-                // 减法
+                // 减法：竖式第1行=被减数a（在上），第2行=减数b（在下）
                 const borrow = a0 < b0;
                 // 借位后新的个位（被减数个位+10）
                 const borrowed0 = a0 + 10;
                 // 借位后十位（被减数十位-1）
                 const borrowed1 = a1 - 1;
 
-                // 竖式第1步：显示减数b
+                // 竖式第1步：显示被减数 a（在上面）
                 steps.push({
                     row: 0,
-                    content: `<span class="v-op">\u2212</span><span class="v-num"><span class="digit appear">${b}</span></span>`,
-                    highlight: false,
-                    voice: `${b}`
-                });
-
-                // 竖式第2步：显示被减数a
-                steps.push({
-                    row: 1,
-                    content: `<span style="width:36px"></span><span class="v-num"><span class="digit appear">${a}</span></span>`,
+                    content: `<span class="v-op">\u2212</span><span class="v-num"><span class="digit appear">${a}</span></span>`,
                     highlight: false,
                     voice: `${a}`
+                });
+
+                // 竖式第2步：显示减数 b（在下面）
+                steps.push({
+                    row: 1,
+                    content: `<span style="width:36px"></span><span class="v-num"><span class="digit appear">${b}</span></span>`,
+                    highlight: false,
+                    voice: `减${b}`
                 });
 
                 // 竖式第3步：画线
@@ -1449,23 +1449,21 @@
                 });
 
                 if (borrow) {
-                    // 借位竖式共5步：1减数、2被减数、3横线、4借位标记(borrowed0)、5最终答案(ans)
-                    // 第4步：显示借位标记（小圆点表示借位）
+                    // 借位竖式：第4步显示借位标记（个小数点），第5步显示答案
                     steps.push({
                         row: 2,
                         content: `<span class="v-num"><span class="digit borrow appear">\u00B7</span><span class="digit">${a0}</span></span>`,
                         highlight: true,
-                        voice: `${a0}不够减${b0}，从十位借一当十，十位${a1}变成${borrowed1}`
+                        voice: `${a0}不够减${b0}，从十位借一当十，十位${a1}变成${borrowed1}，个位${borrowed0}减${b0}等于${borrowed0-b0}`
                     });
-                    // 第5步：最终答案（完整竖式结果）
                     steps.push({
                         row: 3,
                         content: `<span class="v-result appear">${ans}</span>`,
                         highlight: true,
-                        voice: `个位${borrowed0}减${b0}等于${borrowed0-b0}，十位${borrowed1}减${b1}等于${borrowed1-b1}，答案是${ans}`
+                        voice: `答案是${ans}`
                     });
                 } else {
-                    // 不需要借位：直接个位减个位，十位减十位
+                    // 不需要借位
                     steps.push({
                         row: 2,
                         content: `<span class="v-num"><span class="digit">${a0-b0}</span></span>`,
@@ -1720,7 +1718,10 @@
 
                             // 念语音（不阻塞动画进行）
                             if (step.voice && soundOn) {
-                                linVoice(step.voice, null);
+                                var voiceDone = false;
+                                linVoice(step.voice, function() { voiceDone = true; });
+                                // X5无语音时3秒后强制继续
+                                setTimeout(function() { voiceDone = true; }, 3000);
                             }
                         });
                     }
@@ -1882,22 +1883,43 @@
             showStep(0);
 
             let i = 0;
+
             function next() {
-                if (i >= steps.length) return;
-                showStep(i);
-                // 显示当前步骤文字（大字提示，弥补X5没有语音的不足）
-                showStepHint(i);
-                if (hasSpeech) {
-                    linVoice(steps[i].t.replace(/<[^>]+>/g,''), () => {
-                        i++;
-                        setTimeout(next, 1200);
-                    });
-                } else {
-                    // X5无语音：自动逐步显示，每步停留1.2秒
-                    i++;
-                    setTimeout(next, 1200);
+                if (i >= steps.length) {
+                    isSpeaking = false;
+                    document.getElementById('speaking').classList.remove('show');
+                    return;
                 }
+
+                showStep(i);
+                // 始终显示大字提示（X5无语音时的兜底）
+                showStepHint(i);
+
+                // 提取纯文本并念出来
+                var text = steps[i].t.replace(/<[^>]+>/g, '').replace(/\u2212/g, '减').replace(/-/g, '减').replace(/\+/g, '加').replace(/=/g, '等于').trim();
+                isSpeaking = true;
+                document.getElementById('speaking').classList.add('show');
+
+                linVoice(text, function() {
+                    isSpeaking = false;
+                    document.getElementById('speaking').classList.remove('show');
+                    i++;
+                    // 有语音时等语音播完+额外缓冲；无语音时固定1.8秒
+                    setTimeout(next, hasSpeech ? 600 : 1800);
+                });
+
+                // X5 无语音合成时 linVoice 立即调用 done，1.8秒后自动进入下一步
+                // 如果3秒后仍在 speakAll 中（语音失败保护），强制继续
+                setTimeout(function() {
+                    if (isSpeaking) {
+                        isSpeaking = false;
+                        document.getElementById('speaking').classList.remove('show');
+                        i++;
+                        next();
+                    }
+                }, 3000);
             }
+
             next();
         }
 
