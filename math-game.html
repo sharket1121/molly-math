@@ -692,7 +692,7 @@ function makeHint(p){
       steps.push({ t:`十位 ${a1} − ${b1} = <span class="hl">${a1-b1}</span>`, sub:'' });
       steps.push({ t:`答案 <span class="ok">${ans}</span>`, sub:'' });
     }
-    return { steps, dots:null, vert:null, title:'竖式计算法 📋' };
+    return { steps, dots:null, vert:genVert(p), title:'竖式计算法 📋' };
   }
 
   return { steps:[], dots:null, vert:null, title:'解题提示' };
@@ -892,7 +892,7 @@ function newProblem(){
 
   const p=G.problem;
   const opStr=p.op==='-'?'−':p.op;
-  D.probText.textContent=`${p.a} ${opStr} ${p.b} = ?`;
+  D.probText.textContent=`${p.a} ${opStr} ${p.b} =  `;
   D.ansInput.value='';
   D.hintBox.classList.remove('show');
   D.hintSteps.innerHTML='';
