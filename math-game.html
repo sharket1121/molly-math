@@ -1045,12 +1045,140 @@
             border-top: 3px solid transparent;
             border-bottom: 3px solid transparent;
         }
+
+        /* 商店按钮 */
+        .shop-btn {
+            position: fixed;
+            top: 15px;
+            right: 70px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid #e8e0d8;
+            background: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 100;
+            padding: 0;
+        }
+        .shop-btn:hover { transform: scale(1.08); border-color: #FFB74D; }
+
+        /* 计时显示 */
+        .time-stats { margin-bottom: 8px; }
+        .time-stats.hidden { display: none; }
+        .time-stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            font-size: 11px;
+            color: #bbb;
+        }
+        .time-stats-row b { color: #78909c; font-size: 12px; }
+
+        /* 商店弹窗 */
+        .shop-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.85);
+            background: white;
+            padding: 25px 20px;
+            border-radius: 24px;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: all 0.25s;
+            max-width: 420px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .shop-popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .shop-coins {
+            font-size: 16px;
+            color: #FF9800;
+            margin: 10px 0 15px;
+            font-weight: bold;
+        }
+        .shop-coins b { font-size: 22px; }
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .shop-item {
+            background: #fefcf9;
+            border: 2px solid #f0ebe3;
+            border-radius: 16px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .shop-item:hover { border-color: #d4a574; transform: translateY(-2px); }
+        .shop-item.owned { border-color: #a5d6a7; background: #f1f8e9; }
+        .shop-item.equipped { border-color: #FFB74D; background: #fff8e1; }
+        .shop-item.equipped::after {
+            content: '✓';
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            color: #FF9800;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .shop-item-name { font-size: 13px; color: #5a5a5a; font-weight: bold; margin: 6px 0 2px; }
+        .shop-item-desc { font-size: 10px; color: #bbb; margin-bottom: 4px; }
+        .shop-item-price {
+            font-size: 12px;
+            color: #FF9800;
+            font-weight: bold;
+        }
+        .shop-item-btn {
+            margin-top: 6px;
+            padding: 4px 14px;
+            border-radius: 14px;
+            border: none;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .shop-item-btn.buy { background: #FFB74D; color: white; }
+        .shop-item-btn.buy:hover { background: #FF9800; }
+        .shop-item-btn.equip { background: #81c784; color: white; }
+        .shop-item-btn.equip:hover { background: #66BB6A; }
+        .shop-item-btn.unequip { background: #e0e0e0; color: #757575; }
+        .shop-item-btn.unequip:hover { background: #bdbdbd; }
+        .shop-close {
+            margin-top: 8px;
+            padding: 10px 30px;
+            border: 2px solid #e8e0d8;
+            border-radius: 20px;
+            background: white;
+            font-size: 14px;
+            color: #8d8d8d;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .shop-close:hover { border-color: #c49a6c; color: #c49a6c; }
     </style>
 </head>
 <body>
     <button class="sound-btn" id="soundBtn">
         <span class="bell-icon" id="bellIcon"><svg viewBox="0 0 24 24" fill="none" stroke="#8d8d8d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
     </button>
+    <button class="shop-btn" id="shopBtn">🛒</button>
 
     <!-- 开始页 -->
     <div class="start-page" id="startPage">
@@ -1085,6 +1213,13 @@
 
             <!-- 锁定模式统计（选关锁定后显示） -->
             <div class="lock-stats hidden" id="lockStats">
+                <!-- 计时显示 -->
+                <div class="time-stats hidden" id="timeStats">
+                    <div class="time-stats-row">
+                        <span>总用时 <b id="tsTotal">0s</b></span>
+                        <span>平均 <b id="tsAvg">0s</b></span>
+                    </div>
+                </div>
                 <div class="lock-stats-row">
                     <span>做题 <b id="lsTotal">0</b></span>
                     <span>答对 <b id="lsCorrect">0</b></span>
@@ -1187,6 +1322,15 @@
         <div class="popup-detail" id="popupDetail"></div>
     </div>
 
+    <!-- 商店弹窗 -->
+    <div class="overlay" id="shopOverlay"></div>
+    <div class="shop-popup" id="shopPopup">
+        <div style="font-size:20px;color:#5a5a5a;margin-bottom:5px;">🛒 积分商店</div>
+        <div class="shop-coins">💰 余额：<b id="shopBalance">0</b> 积分</div>
+        <div class="shop-grid" id="shopGrid"></div>
+        <button class="shop-close" id="shopCloseBtn">关闭</button>
+    </div>
+
     <script>
         // ============ 可爱猫咪定义（多表情） ============
         function catSVG(size, mood) {
@@ -1259,11 +1403,190 @@
             return CAT.svg(size, 'neutral');
         }
 
+        // ============ 鸟类皮肤SVG（积分商店） ============
+        const BIRD_SKINS = {
+            tit: {
+                id: 'tit', name: '小山雀', price: 100,
+                desc: '圆滚滚的小可爱',
+                svg: function(size) {
+                    const w = { small: 28, medium: 36, large: 56, xlarge: 80 }[size] || 36;
+                    return `<svg class="pet-icon ${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 身体 -->
+  <ellipse cx="32" cy="38" rx="26" ry="24" fill="#4FC3F7"/>
+  <!-- 白色脸颊 -->
+  <ellipse cx="32" cy="44" rx="16" ry="11" fill="#FFF9C4"/>
+  <!-- 头顶深色 -->
+  <ellipse cx="32" cy="24" rx="18" ry="10" fill="#29B6F6"/>
+  <!-- 眼睛（大圆眼） -->
+  <circle cx="20" cy="32" r="5.5" fill="white"/>
+  <circle cx="44" cy="32" r="5.5" fill="white"/>
+  <circle cx="21" cy="33" r="3.5" fill="#37474F"/>
+  <circle cx="45" cy="33" r="3.5" fill="#37474F"/>
+  <circle cx="22" cy="31" r="1.2" fill="white"/>
+  <circle cx="46" cy="31" r="1.2" fill="white"/>
+  <!-- 腮红 -->
+  <ellipse cx="12" cy="40" rx="5" ry="3" fill="#FFAB91" opacity="0.6"/>
+  <ellipse cx="52" cy="40" rx="5" ry="3" fill="#FFAB91" opacity="0.6"/>
+  <!-- 小三角嘴 -->
+  <polygon points="32,40 28,44 36,44" fill="#FF8F00"/>
+  <!-- 翅膀 -->
+  <ellipse cx="6" cy="36" rx="8" ry="12" fill="#29B6F6" transform="rotate(15 6 36)"/>
+  <ellipse cx="58" cy="36" rx="8" ry="12" fill="#29B6F6" transform="rotate(-15 58 36)"/>
+</svg>`;
+                }
+            },
+            swift: {
+                id: 'swift', name: '小雨燕', price: 120,
+                desc: '飞得最快的选手',
+                svg: function(size) {
+                    const w = { small: 28, medium: 36, large: 56, xlarge: 80 }[size] || 36;
+                    return `<svg class="pet-icon ${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="32" cy="38" rx="26" ry="24" fill="#455A64"/>
+  <ellipse cx="32" cy="44" rx="15" ry="9" fill="#ECEFF1"/>
+  <ellipse cx="32" cy="22" rx="20" ry="12" fill="#37474F"/>
+  <!-- 白色喉斑 -->
+  <ellipse cx="32" cy="35" rx="10" ry="6" fill="#ECEFF1" opacity="0.8"/>
+  <!-- 眼睛 -->
+  <circle cx="21" cy="30" r="4.5" fill="white"/>
+  <circle cx="43" cy="30" r="4.5" fill="white"/>
+  <circle cx="22" cy="31" r="2.8" fill="#ECEFF1"/>
+  <circle cx="44" cy="31" r="2.8" fill="#ECEFF1"/>
+  <circle cx="23" cy="29" r="1" fill="white"/>
+  <circle cx="45" cy="29" r="1" fill="white"/>
+  <!-- 尖嘴 -->
+  <polygon points="32,38 28,42 36,42" fill="#FF8F00"/>
+  <!-- 长翅 -->
+  <ellipse cx="4" cy="34" rx="10" ry="18" fill="#37474F" transform="rotate(20 4 34)"/>
+  <ellipse cx="60" cy="34" rx="10" ry="18" fill="#37474F" transform="rotate(-20 60 34)"/>
+  <!-- 叉尾 -->
+  <polygon points="28,58 32,52 36,58" fill="#455A64"/>
+</svg>`;
+                }
+            },
+            parrot: {
+                id: 'parrot', name: '小鹦鹉', price: 200,
+                desc: '色彩斑斓的学霸',
+                svg: function(size) {
+                    const w = { small: 28, medium: 36, large: 56, xlarge: 80 }[size] || 36;
+                    return `<svg class="pet-icon ${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="32" cy="38" rx="26" ry="24" fill="#66BB6A"/>
+  <ellipse cx="32" cy="43" rx="15" ry="10" fill="#FFEB3B"/>
+  <ellipse cx="32" cy="22" rx="18" ry="10" fill="#43A047"/>
+  <!-- 冠羽 -->
+  <ellipse cx="28" cy="12" rx="5" ry="8" fill="#FF7043" transform="rotate(-10 28 12)"/>
+  <ellipse cx="32" cy="10" rx="4" ry="7" fill="#FFEB3B" transform="rotate(0 32 10)"/>
+  <ellipse cx="36" cy="12" rx="5" ry="8" fill="#FF7043" transform="rotate(10 36 12)"/>
+  <!-- 眼睛 -->
+  <circle cx="20" cy="32" r="4.5" fill="white"/>
+  <circle cx="44" cy="32" r="4.5" fill="white"/>
+  <circle cx="21" cy="33" r="3" fill="#37474F"/>
+  <circle cx="45" cy="33" r="3" fill="#37474F"/>
+  <circle cx="22" cy="31" r="1.2" fill="white"/>
+  <circle cx="46" cy="31" r="1.2" fill="white"/>
+  <!-- 腮红 -->
+  <ellipse cx="11" cy="40" rx="5" ry="3" fill="#FF8A80" opacity="0.7"/>
+  <ellipse cx="53" cy="40" rx="5" ry="3" fill="#FF8A80" opacity="0.7"/>
+  <!-- 弯钩嘴 -->
+  <path d="M32,39 Q28,45 30,48 Q33,48 36,44 Z" fill="#FF6F00"/>
+  <!-- 翅膀 -->
+  <ellipse cx="6" cy="35" rx="9" ry="13" fill="#43A047" transform="rotate(10 6 35)"/>
+  <ellipse cx="58" cy="35" rx="9" ry="13" fill="#43A047" transform="rotate(-10 58 35)"/>
+</svg>`;
+                }
+            },
+            kingfisher: {
+                id: 'kingfisher', name: '小翠鸟', price: 180,
+                desc: '蓝宝石般闪耀',
+                svg: function(size) {
+                    const w = { small: 28, medium: 36, large: 56, xlarge: 80 }[size] || 36;
+                    return `<svg class="pet-icon ${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="32" cy="38" rx="26" ry="24" fill="#0288D1"/>
+  <ellipse cx="32" cy="44" rx="15" ry="9" fill="#FF8F00"/>
+  <ellipse cx="32" cy="22" rx="20" ry="11" fill="#0277BD"/>
+  <!-- 冠羽 -->
+  <ellipse cx="28" cy="13" rx="4" ry="7" fill="#01579B" transform="rotate(-15 28 13)"/>
+  <ellipse cx="36" cy="13" rx="4" ry="7" fill="#01579B" transform="rotate(15 36 13)"/>
+  <!-- 眼睛 -->
+  <circle cx="20" cy="32" r="4" fill="white"/>
+  <circle cx="44" cy="32" r="4" fill="white"/>
+  <circle cx="21" cy="33" r="2.8" fill="#37474F"/>
+  <circle cx="45" cy="33" r="2.8" fill="#37474F"/>
+  <circle cx="22" cy="31" r="1" fill="white"/>
+  <circle cx="46" cy="31" r="1" fill="white"/>
+  <!-- 腮红 -->
+  <ellipse cx="11" cy="40" rx="5" ry="3" fill="#FFCC80" opacity="0.6"/>
+  <ellipse cx="53" cy="40" rx="5" ry="3" fill="#FFCC80" opacity="0.6"/>
+  <!-- 长尖嘴 -->
+  <polygon points="32,38 26,44 38,44" fill="#37474F"/>
+  <!-- 翅膀 -->
+  <ellipse cx="6" cy="36" rx="9" ry="13" fill="#0277BD" transform="rotate(12 6 36)"/>
+  <ellipse cx="58" cy="36" rx="9" ry="13" fill="#0277BD" transform="rotate(-12 58 36)"/>
+</svg>`;
+                }
+            },
+            owl: {
+                id: 'owl', name: '猫头鹰', price: 250,
+                desc: '智慧的大学者',
+                svg: function(size) {
+                    const w = { small: 28, medium: 36, large: 56, xlarge: 80 }[size] || 36;
+                    return `<svg class="pet-icon ${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="32" cy="38" rx="26" ry="24" fill="#8D6E63"/>
+  <ellipse cx="32" cy="44" rx="15" ry="10" fill="#D7CCC8"/>
+  <ellipse cx="32" cy="23" rx="22" ry="12" fill="#6D4C41"/>
+  <!-- 耳簇 -->
+  <polygon points="12,18 8,6 18,14" fill="#6D4C41"/>
+  <polygon points="52,18 56,6 46,14" fill="#6D4C41"/>
+  <polygon points="14,16 12,8 18,14" fill="#A1887F"/>
+  <polygon points="50,16 52,8 46,14" fill="#A1887F"/>
+  <!-- 大眼睛（猫头鹰特征） -->
+  <circle cx="20" cy="32" r="7" fill="#FFEB3B"/>
+  <circle cx="44" cy="32" r="7" fill="#FFEB3B"/>
+  <circle cx="20" cy="32" r="4.5" fill="white"/>
+  <circle cx="44" cy="32" r="4.5" fill="white"/>
+  <circle cx="20" cy="33" r="3" fill="#37474F"/>
+  <circle cx="44" cy="33" r="3" fill="#37474F"/>
+  <circle cx="21" cy="30" r="1.2" fill="white"/>
+  <circle cx="45" cy="30" r="1.2" fill="white"/>
+  <!-- 小嘴 -->
+  <polygon points="32,40 30,42 34,42" fill="#FF8F00"/>
+  <!-- 腮红 -->
+  <ellipse cx="9" cy="40" rx="4" ry="2.5" fill="#FFCC80" opacity="0.5"/>
+  <ellipse cx="55" cy="40" rx="4" ry="2.5" fill="#FFCC80" opacity="0.5"/>
+  <!-- 翅膀 -->
+  <ellipse cx="5" cy="38" rx="10" ry="14" fill="#6D4C41" transform="rotate(10 5 38)"/>
+  <ellipse cx="59" cy="38" rx="10" ry="14" fill="#6D4C41" transform="rotate(-10 59 38)"/>
+</svg>`;
+                }
+            }
+        };
+
+        // 当前皮肤渲染（有皮肤用皮肤，没有用默认猫）
+        function petSVG(size, mood) {
+            if (currentSkin && BIRD_SKINS[currentSkin]) {
+                return BIRD_SKINS[currentSkin].svg(size);
+            }
+            return CAT.svg(size, mood || 'neutral');
+        }
+
+        // 更新所有猫咪显示为当前皮肤
+        function refreshAllPets() {
+            var mood = currentCatMood || 'neutral';
+            var catEl = document.getElementById('catMood');
+            if (catEl) {
+                catEl.innerHTML = '<div style="animation:bounce 1.5s ease-in-out infinite alternate;display:flex;justify-content:center;">' + petSVG('large', mood) + '</div>';
+            }
+            var startAnimals = document.getElementById('startAnimals');
+            if (startAnimals && document.getElementById('startPage').style.display !== 'none') {
+                startAnimals.innerHTML = '<div style="animation:bounce 1.2s ease-in-out infinite alternate;display:flex;justify-content:center;">' + petSVG('xlarge', 'neutral') + '</div>';
+            }
+        }
+
         // 初始化开始页（固定显示一只可爱的猫咪）
         function initAnimals() {
+            loadShopData();
             const startDiv = document.getElementById('startAnimals');
             startDiv.innerHTML = '<div style="animation:bounce 1.2s ease-in-out infinite alternate;display:flex;justify-content:center;">' +
-                CAT.svg('xlarge', 'neutral') + '</div>';
+                petSVG('xlarge', 'neutral') + '</div>';
         }
 
         // ============ 状态 ============
@@ -1275,15 +1598,19 @@
             currentCatMood = mood;
             var el = document.getElementById('catMood');
             if (el) {
-                el.innerHTML = '<div style="animation:bounce 1.5s ease-in-out infinite alternate;display:flex;justify-content:center;">' + CAT.svg('large', mood) + '</div>';
-                el.style.animation = 'none';
-                el.offsetHeight; // force reflow
-                if (mood === 'happy') {
-                    el.style.animation = 'catBounce 0.5s ease';
-                } else if (mood === 'sad') {
-                    el.style.animation = 'catShake 0.5s ease';
+                // 有皮肤时只显示皮肤（不切换表情），无皮肤时显示猫咪表情
+                if (currentSkin) {
+                    el.innerHTML = '<div style="animation:bounce 1.5s ease-in-out infinite alternate;display:flex;justify-content:center;">' + petSVG('large', 'neutral') + '</div>';
+                } else {
+                    el.innerHTML = '<div style="animation:bounce 1.5s ease-in-out infinite alternate;display:flex;justify-content:center;">' + CAT.svg('large', mood) + '</div>';
+                    el.style.animation = 'none';
+                    el.offsetHeight;
+                    if (mood === 'happy') {
+                        el.style.animation = 'catBounce 0.5s ease';
+                    } else if (mood === 'sad') {
+                        el.style.animation = 'catShake 0.5s ease';
+                    }
                 }
-                // 2.5秒后自动恢复中性表情
                 clearTimeout(window._catMoodTimer);
                 window._catMoodTimer = setTimeout(function() {
                     updateCatMood('neutral');
@@ -1303,6 +1630,11 @@
         let isManualLevel = false; // 手动选关锁定
         let lockTotal = 0;          // 锁定模式下做题总数
         let lockCorrect = 0;        // 锁定模式下答对数
+        let questionStartTime = 0;  // 当前题开始时间
+        let totalTimeMs = 0;        // 累计做题时间(ms)
+        let shopCoins = 0;          // 商店积分
+        let ownedSkins = [];        // 已拥有的皮肤ID列表
+        let currentSkin = null;     // 当前装备的皮肤ID (null=默认猫咪)
 
         const LEVEL_NAMES = [
             '十以内加减法',
@@ -1873,7 +2205,17 @@
             var rate = lockTotal > 0 ? Math.round(lockCorrect / lockTotal * 100) : 0;
             document.getElementById('lsRate').textContent = rate + '%';
 
-            // 里程碑提示
+            // 计时显示
+            var timeStats = document.getElementById('timeStats');
+            if (timeStats && lockTotal > 0) {
+                timeStats.classList.remove('hidden');
+                var totalSec = Math.round(totalTimeMs / 1000);
+                var avgSec = (totalTimeMs / lockTotal / 1000).toFixed(1);
+                document.getElementById('tsTotal').textContent = totalSec + 's';
+                document.getElementById('tsAvg').textContent = avgSec + 's';
+            }
+
+            // 里程碑（文字仅作后备，主提示由 checkMilestonePopup 弹窗处理）
             var msgs = {10:'加油！💪', 20:'再接再厉！🌟', 30:'你太棒了！👍'};
             var msg = null;
             if (lockCorrect === 10) msg = msgs[10];
@@ -1884,6 +2226,123 @@
                 el.textContent = msg;
                 el.classList.remove('hidden');
             }
+        }
+
+        // 里程碑弹窗（等级5锁定模式，用大弹窗显示）
+        function checkMilestonePopup() {
+            if (!isManualLevel || level !== 5) return;
+            var msgs = {10:'加油！💪', 20:'再接再厉！🌟', 30:'你太棒了！👍'};
+            var msg = msgs[lockCorrect];
+            if (!msg) return;
+            var overlay = document.getElementById('overlay');
+            var popup = document.getElementById('popup');
+            document.getElementById('popupIcon').innerHTML = '<div class="icon-star">' + SVG_STAR + '</div>';
+            document.getElementById('popupTitle').textContent = '里程碑！';
+            document.getElementById('popupDetail').textContent = msg;
+            popup.className = 'popup correct show';
+            overlay.classList.add('show');
+            setTimeout(function() { closePopup(); }, 2000);
+        }
+
+        // ============ 商店 ============
+        function openShop() {
+            document.getElementById('shopBalance').textContent = shopCoins;
+            renderShopGrid();
+            document.getElementById('shopPopup').classList.add('show');
+            document.getElementById('shopOverlay').classList.add('show');
+        }
+
+        function closeShop() {
+            document.getElementById('shopPopup').classList.remove('show');
+            document.getElementById('shopOverlay').classList.remove('show');
+        }
+
+        function renderShopGrid() {
+            var grid = document.getElementById('shopGrid');
+            var skins = Object.values(BIRD_SKINS);
+            grid.innerHTML = skins.map(function(s) {
+                var owned = ownedSkins.indexOf(s.id) >= 0;
+                var equipped = currentSkin === s.id;
+                var cls = 'shop-item';
+                if (equipped) cls += ' equipped';
+                else if (owned) cls += ' owned';
+                var btnHTML = '';
+                if (equipped) {
+                    btnHTML = '<button class="shop-item-btn unequip" data-action="unequip" data-id="' + s.id + '">卸下</button>';
+                } else if (owned) {
+                    btnHTML = '<button class="shop-item-btn equip" data-action="equip" data-id="' + s.id + '">装备</button>';
+                } else {
+                    btnHTML = '<button class="shop-item-btn buy" data-action="buy" data-id="' + s.id + '">' + s.price + ' 积分</button>';
+                }
+                return '<div class="' + cls + '">'
+                    + s.svg('large')
+                    + '<div class="shop-item-name">' + s.name + '</div>'
+                    + '<div class="shop-item-desc">' + s.desc + '</div>'
+                    + (!owned ? '<div class="shop-item-price">💰 ' + s.price + ' 积分</div>' : '')
+                    + btnHTML
+                    + '</div>';
+            }).join('');
+
+            grid.querySelectorAll('.shop-item-btn').forEach(function(btn) {
+                btn.addEventListener('pointerdown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var action = this.getAttribute('data-action');
+                    var id = this.getAttribute('data-id');
+                    if (action === 'buy') buySkin(id);
+                    else if (action === 'equip') equipSkin(id);
+                    else if (action === 'unequip') unequipSkin();
+                });
+            });
+        }
+
+        function buySkin(skinId) {
+            var skin = BIRD_SKINS[skinId];
+            if (!skin) return;
+            if (shopCoins < skin.price) {
+                alert('积分不够哦~ 还需要 ' + (skin.price - shopCoins) + ' 积分');
+                return;
+            }
+            shopCoins -= skin.price;
+            ownedSkins.push(skinId);
+            equipSkin(skinId);
+            saveShopData();
+            renderShopGrid();
+            document.getElementById('shopBalance').textContent = shopCoins;
+            ding('ok');
+        }
+
+        function equipSkin(skinId) {
+            currentSkin = skinId;
+            saveShopData();
+            renderShopGrid();
+            refreshAllPets();
+        }
+
+        function unequipSkin() {
+            currentSkin = null;
+            saveShopData();
+            renderShopGrid();
+            refreshAllPets();
+        }
+
+        function saveShopData() {
+            localStorage.setItem('mathshop', JSON.stringify({
+                shopCoins: shopCoins,
+                ownedSkins: ownedSkins,
+                currentSkin: currentSkin
+            }));
+        }
+
+        function loadShopData() {
+            try {
+                var data = JSON.parse(localStorage.getItem('mathshop'));
+                if (data) {
+                    shopCoins = data.shopCoins || 0;
+                    ownedSkins = data.ownedSkins || [];
+                    currentSkin = data.currentSkin || null;
+                }
+            } catch(e) {}
         }
 
         function renderSteps() {
@@ -2005,6 +2464,7 @@
         function newProblem() {
             stopVoice();
             problem = make(level);
+            questionStartTime = Date.now();
             console.log('[math-game] newProblem() 生成题目:', problem);
             if (!problem || !problem.ans) {
                 console.error('[math-game] 题目生成失败，problem=', problem, 'level=', level);
@@ -2057,7 +2517,14 @@
                 correct++;
                 winStreak++;
                 loseStreak = 0;
-                score += 10 + winStreak * 2;
+
+                // 计时 + 积分
+                var timeSpent = Date.now() - questionStartTime;
+                totalTimeMs += timeSpent;
+                var timeBonus = timeSpent <= 3000 ? 10 : timeSpent <= 5000 ? 7 : timeSpent <= 8000 ? 4 : timeSpent <= 12000 ? 1 : 0;
+                var earned = 10 + timeBonus;
+                score += earned;
+                shopCoins += earned;
                 if (isManualLevel) { lockTotal++; lockCorrect++; }
 
                 ding('ok');
@@ -2066,12 +2533,15 @@
 
                 document.getElementById('popupIcon').innerHTML = getPopupIconHTML(true);
                 document.getElementById('popupTitle').textContent = '正确!';
-                document.getElementById('popupDetail').textContent = `+${10 + winStreak * 2} 分`;
+                var bonusText = timeBonus > 0 ? ' ⚡+' + timeBonus : '';
+                document.getElementById('popupDetail').textContent = `+${earned} 分${bonusText}`;
 
                 popup.className = 'popup correct show';
                 overlay.classList.add('show');
 
                 renderProgress();
+                // 里程碑弹窗（等级5锁定模式）
+                checkMilestonePopup();
 
                 if (winStreak >= 5) {
                     setTimeout(() => {
@@ -2098,6 +2568,8 @@
 
             } else {
                 loseStreak++;
+                var timeSpent2 = Date.now() - questionStartTime;
+                totalTimeMs += timeSpent2;
                 if (isManualLevel) lockTotal++;
                 winStreak = 0;
 
@@ -2274,10 +2746,10 @@
             document.getElementById('winScore').textContent = score;
             document.getElementById('winRate').textContent = rate + '%';
 
-            // 渲染通关页猫咪头像
+            // 渲染通关页头像
             document.getElementById('winEmoji').innerHTML =
                 '<div style="margin-bottom:15px;animation:bounce 0.6s infinite alternate;display:flex;justify-content:center;">' +
-                CAT.svg('large', 'happy') + '</div>';
+                petSVG('large', 'happy') + '</div>';
 
             ding('ok');
             linVoice('太棒了！全部通关！你真是个数学小天才！');
@@ -2289,11 +2761,15 @@
             pet = CAT; // 固定猫咪
             isManualLevel = false;
             lockTotal = 0; lockCorrect = 0;
+            totalTimeMs = 0;
             document.getElementById('lockStats').classList.add('hidden');
+            document.getElementById('timeStats').classList.add('hidden');
             document.getElementById('milestoneMsg').classList.add('hidden');
 
+            loadShopData();
             document.getElementById('startPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
+            refreshAllPets();
 
             // 显示难度快捷选择
             var levelQuick = document.getElementById('levelQuickSelect');
@@ -2327,7 +2803,9 @@
             winStreak = 0; loseStreak = 0;
             isManualLevel = false;
             lockTotal = 0; lockCorrect = 0;
+            totalTimeMs = 0;
             document.getElementById('lockStats').classList.add('hidden');
+            document.getElementById('timeStats').classList.add('hidden');
             document.getElementById('milestoneMsg').classList.add('hidden');
 
             document.getElementById('winPage').style.display = 'none';
@@ -2502,7 +2980,9 @@
                     isManualLevel = true;
                     lockTotal = 0;
                     lockCorrect = 0;
+                    totalTimeMs = 0;
                     document.getElementById('lockStats').classList.remove('hidden');
+                    document.getElementById('timeStats').classList.add('hidden');
                     document.getElementById('milestoneMsg').classList.add('hidden');
                     winStreak = 0;
                     loseStreak = 0;
@@ -2536,6 +3016,17 @@
                 })(soundBtn);
             }
 
+            // 商店按钮
+            var shopBtn = document.getElementById('shopBtn');
+            if (shopBtn) {
+                (function(btn) {
+                    var busy = false;
+                    function exec() { if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); openShop(); }
+                    btn.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    btn.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                })(shopBtn);
+            }
+
             // 点击遮罩关闭弹窗
             var overlay = document.getElementById('overlay');
             if (overlay) {
@@ -2545,6 +3036,23 @@
                     el.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
                     el.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
                 })(overlay);
+            }
+
+            // 商店遮罩关闭
+            var shopOverlay = document.getElementById('shopOverlay');
+            if (shopOverlay) {
+                (function(el) {
+                    var busy = false;
+                    function exec() { if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); closeShop(); }
+                    el.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    el.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                })(shopOverlay);
+            }
+
+            // 商店关闭按钮
+            var shopCloseBtn = document.getElementById('shopCloseBtn');
+            if (shopCloseBtn) {
+                addBtn('shopCloseBtn', closeShop);
             }
 
             // 输入框：过滤非数字 + 回车提交
