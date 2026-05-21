@@ -8,9 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- vConsole 移动端调试工具 -->
-    <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
-    <style>
+
+<style>
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             touch-action: manipulation;
@@ -553,6 +552,8 @@
         }
 
         .submit-btn {
+            position: relative;
+            z-index: 3;
             height: 52px;
             padding: 0 25px;
             background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
@@ -1356,21 +1357,16 @@
         function linVoice(text, done) {
             if (!soundOn) { if(done) done(); return; }
 
-            // 微信X5不支持语音合成，直接跳过
             if (!hasSpeech) {
-                console.log('[math-game] 语音合成不可用，跳过语音:', text);
                 if (done) done();
                 return;
             }
 
-            // 把符号替换成中文文字，避免语音读成"杠"
             const spoken = text
                 .replace(/\u2212/g, '减')
                 .replace(/-/g, '减')
                 .replace(/\+/g, '加')
-                .replace(/=/g, '等于')
-                .replace(/个/g, '个')
-                .replace(/进一/g, '进一');
+                .replace(/=/g, '等于');
 
             const utt = new SpeechSynthesisUtterance(spoken);
             utt.lang = 'zh-CN';
@@ -1378,7 +1374,43 @@
             utt.pitch = 1.1;
             utt.volume = 0.9;
 
-            const voices = speechSynthesis.getVoices();
+            // 尝试选中文女声（不阻塞）
+            try {
+                const voices = speechSynthesis.getVoices();
+                const nice = voices.find(v => v.lang.includes('zh') && v.name.includes('Female'))
+                    || voices.find(v => v.lang.includes('zh'));
+                if (nice) utt.voice = nice;
+            } catch(e) {}
+
+            // 超时兜底：语音不回调最终也会触发 done
+            var fired = false;
+            function finish() {
+                if (fired) return;
+                fired = true;
+                clearTimeout(t);
+                document.getElementById('speaking').classList.remove('show');
+                isSpeaking = false;
+                if (done) done();
+            }
+
+            utt.onstart = function() {
+                document.getElementById('speaking').classList.add('show');
+                isSpeaking = true;
+            };
+            utt.onend = finish;
+            utt.onerror = finish;
+
+            var t = setTimeout(finish, 4000);
+
+            try {
+                speechSynthesis.cancel();
+                speechSynthesis.speak(utt);
+            } catch(e) {
+                finish();
+            }
+        }
+
+        function setVoice(utt, voices) {
             const nice = voices.find(v =>
                 v.lang.includes('zh') && (
                     v.name.includes('Ting') || v.name.includes('Mei') ||
@@ -1387,21 +1419,7 @@
                     v.name.includes('Female')
                 )
             ) || voices.find(v => v.lang.includes('zh'));
-
             if (nice) utt.voice = nice;
-
-            utt.onstart = () => {
-                document.getElementById('speaking').classList.add('show');
-                isSpeaking = true;
-            };
-            utt.onend = utt.onerror = () => {
-                document.getElementById('speaking').classList.remove('show');
-                isSpeaking = false;
-                if (done) done();
-            };
-
-            speechSynthesis.cancel();
-            speechSynthesis.speak(utt);
         }
 
         function stopVoice() {
@@ -2095,6 +2113,7 @@
             showStep(0);
 
             let i = 0;
+            let stepActive = true; // 当前步骤是否还在等待语音
 
             function next() {
                 if (i >= steps.length) {
@@ -2104,26 +2123,26 @@
                 }
 
                 showStep(i);
-                // 始终显示大字提示（X5无语音时的兜底）
                 showStepHint(i);
 
-                // 提取纯文本并念出来
                 var text = steps[i].t.replace(/<[^>]+>/g, '').replace(/\u2212/g, '减').replace(/-/g, '减').replace(/\+/g, '加').replace(/=/g, '等于').trim();
                 isSpeaking = true;
+                stepActive = true;
                 document.getElementById('speaking').classList.add('show');
 
                 linVoice(text, function() {
+                    if (!stepActive) return;
+                    stepActive = false;
                     isSpeaking = false;
                     document.getElementById('speaking').classList.remove('show');
                     i++;
-                    // 有语音时等语音播完+额外缓冲；无语音时固定1.8秒
                     setTimeout(next, hasSpeech ? 600 : 1800);
                 });
 
-                // X5 无语音合成时 linVoice 立即调用 done，1.8秒后自动进入下一步
-                // 如果3秒后仍在 speakAll 中（语音失败保护），强制继续
+                // 兜底：无论语音是否成功，3秒后强制继续
                 setTimeout(function() {
-                    if (isSpeaking) {
+                    if (stepActive) {
+                        stepActive = false;
                         isSpeaking = false;
                         document.getElementById('speaking').classList.remove('show');
                         i++;
@@ -2301,10 +2320,8 @@
             } catch(e) {}
         }
 
-        // ============ 事件绑定（腾讯 X5 WebView 兼容性 - 双轨 touch+click） ============
+        // ============ 事件绑定（pointerdown 统一处理触摸+鼠标，最可靠） ============
         function bindEvents() {
-            // 双轨按钮处理器：touchstart + click 双监听，防止 X5 漏报
-            // touchstart 直接触发，click 兜底；用 busy 标志防重复执行
             function addBtn(id, fn) {
                 var el = document.getElementById(id);
                 if (!el) {
@@ -2314,30 +2331,20 @@
                 var busy = false;
 
                 function exec() {
-                    if (busy) {
-                        console.log('[math-game] 按钮 ' + id + ' 被跳过（busy）');
-                        return;
-                    }
+                    if (busy) return;
                     busy = true;
-                    setTimeout(function() { busy = false; }, 400);
-                    console.log('[math-game] 按钮 ' + id + ' 被触发');
+                    setTimeout(function() { busy = false; }, 500);
+                    // 即时按下反馈
+                    el.style.transform = 'scale(0.93)';
+                    setTimeout(function() { el.style.transform = ''; }, 120);
                     fn();
                 }
 
-                // touchstart：X5 优先触发这个
-                el.addEventListener('touchstart', function(e) {
-                    console.log('[math-game] touchstart 触发:', id);
+                // pointerdown: 鼠标和触摸统一处理，不依赖 touchstart/click 双轨
+                el.addEventListener('pointerdown', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     exec();
-                }, { passive: false });
-
-                // click：桌面浏览器 / 部分 X5 环境兜底
-                el.addEventListener('click', function(e) {
-                    console.log('[math-game] click 触发:', id);
-                    e.stopPropagation();
-                    // 如果 busy 说明 touchstart 已触发过，跳过
-                    if (!busy) exec();
                 });
             }
 
@@ -2498,13 +2505,6 @@
         if (hasSpeech) { try { speechSynthesis.getVoices(); } catch(e) {} }
 
         // ============ 初始化（DOM加载后执行——解决触摸设备不触发问题） ============
-        // 初始化 vConsole 移动端调试面板
-        var vConsole = new VConsole({
-            defaultPlugins: true,
-            maxLogNumber: 1000,
-        });
-        console.log('[math-game] vConsole 已启用，请在页面底部查看');
-
         function doInit() {
             try {
                 initAnimals();
