@@ -8,8 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-
-<style>
+    <!-- 移动端调试工具（生产环境可注释掉）
+    <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script> -->
+    <style>
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             touch-action: manipulation;
@@ -552,8 +553,6 @@
         }
 
         .submit-btn {
-            position: relative;
-            z-index: 3;
             height: 52px;
             padding: 0 25px;
             background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
@@ -615,7 +614,10 @@
         }
         .input-click-area {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            /* 只覆盖输入框，不覆盖回答按钮 */
+            left: 0;
+            width: calc(120px + 12px + 24px); /* 输入框+gap+padding */
+            top: 0; bottom: 0;
             z-index: 1;
             cursor: text;
         }
@@ -623,6 +625,10 @@
         .answer-input {
             position: relative;
             z-index: 2;
+        }
+        .submit-btn {
+            position: relative;
+            z-index: 3; /* 确保按钮在点击区域之上 */
         }
 
         /* 难度快捷选择 */
@@ -1265,7 +1271,7 @@
         let isSpeaking = false;
         let steps = [];
         let verticalSteps = [];
-        let isManualLevel = false; // 是否手动锁定关卡
+        let isManualLevel = false; // 手动选关锁定
 
         const LEVEL_NAMES = [
             '十以内加减法',
@@ -1357,16 +1363,21 @@
         function linVoice(text, done) {
             if (!soundOn) { if(done) done(); return; }
 
+            // 微信X5不支持语音合成，直接跳过
             if (!hasSpeech) {
+                console.log('[math-game] 语音合成不可用，跳过语音:', text);
                 if (done) done();
                 return;
             }
 
+            // 把符号替换成中文文字，避免语音读成"杠"
             const spoken = text
                 .replace(/\u2212/g, '减')
                 .replace(/-/g, '减')
                 .replace(/\+/g, '加')
-                .replace(/=/g, '等于');
+                .replace(/=/g, '等于')
+                .replace(/个/g, '个')
+                .replace(/进一/g, '进一');
 
             const utt = new SpeechSynthesisUtterance(spoken);
             utt.lang = 'zh-CN';
@@ -1374,43 +1385,7 @@
             utt.pitch = 1.1;
             utt.volume = 0.9;
 
-            // 尝试选中文女声（不阻塞）
-            try {
-                const voices = speechSynthesis.getVoices();
-                const nice = voices.find(v => v.lang.includes('zh') && v.name.includes('Female'))
-                    || voices.find(v => v.lang.includes('zh'));
-                if (nice) utt.voice = nice;
-            } catch(e) {}
-
-            // 超时兜底：语音不回调最终也会触发 done
-            var fired = false;
-            function finish() {
-                if (fired) return;
-                fired = true;
-                clearTimeout(t);
-                document.getElementById('speaking').classList.remove('show');
-                isSpeaking = false;
-                if (done) done();
-            }
-
-            utt.onstart = function() {
-                document.getElementById('speaking').classList.add('show');
-                isSpeaking = true;
-            };
-            utt.onend = finish;
-            utt.onerror = finish;
-
-            var t = setTimeout(finish, 4000);
-
-            try {
-                speechSynthesis.cancel();
-                speechSynthesis.speak(utt);
-            } catch(e) {
-                finish();
-            }
-        }
-
-        function setVoice(utt, voices) {
+            const voices = speechSynthesis.getVoices();
             const nice = voices.find(v =>
                 v.lang.includes('zh') && (
                     v.name.includes('Ting') || v.name.includes('Mei') ||
@@ -1419,7 +1394,21 @@
                     v.name.includes('Female')
                 )
             ) || voices.find(v => v.lang.includes('zh'));
+
             if (nice) utt.voice = nice;
+
+            utt.onstart = () => {
+                document.getElementById('speaking').classList.add('show');
+                isSpeaking = true;
+            };
+            utt.onend = utt.onerror = () => {
+                document.getElementById('speaking').classList.remove('show');
+                isSpeaking = false;
+                if (done) done();
+            };
+
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utt);
         }
 
         function stopVoice() {
@@ -1485,7 +1474,6 @@
                     // 两位数加减整十数（如 23+40, 67-30）
                     if (Math.random() > 0.5) {
                         a = rnd(11, 89);
-                        // b 为整十数，且 a+b ≤ 99
                         const maxB = Math.floor((99 - a) / 10);
                         b = rnd(1, maxB) * 10;
                         ans = a + b; type = 'add4';
@@ -2039,10 +2027,12 @@
                             linVoice(`${level}关开始！${LEVEL_NAMES[level-1]}，加油！`);
                             renderTrack();
                             setTimeout(newProblem, 1500);
+                        } else if (level >= 5) {
+                            showWin();
                         } else {
                             // 锁定模式：不晋级，重置 streak 继续当前关
                             winStreak = 0;
-                            closePopup();
+                            renderProgress();
                             newProblem();
                         }
                     }, 1200);
@@ -2113,7 +2103,6 @@
             showStep(0);
 
             let i = 0;
-            let stepActive = true; // 当前步骤是否还在等待语音
 
             function next() {
                 if (i >= steps.length) {
@@ -2123,26 +2112,26 @@
                 }
 
                 showStep(i);
+                // 始终显示大字提示（X5无语音时的兜底）
                 showStepHint(i);
 
+                // 提取纯文本并念出来
                 var text = steps[i].t.replace(/<[^>]+>/g, '').replace(/\u2212/g, '减').replace(/-/g, '减').replace(/\+/g, '加').replace(/=/g, '等于').trim();
                 isSpeaking = true;
-                stepActive = true;
                 document.getElementById('speaking').classList.add('show');
 
                 linVoice(text, function() {
-                    if (!stepActive) return;
-                    stepActive = false;
                     isSpeaking = false;
                     document.getElementById('speaking').classList.remove('show');
                     i++;
+                    // 有语音时等语音播完+额外缓冲；无语音时固定1.8秒
                     setTimeout(next, hasSpeech ? 600 : 1800);
                 });
 
-                // 兜底：无论语音是否成功，3秒后强制继续
+                // X5 无语音合成时 linVoice 立即调用 done，1.8秒后自动进入下一步
+                // 如果3秒后仍在 speakAll 中（语音失败保护），强制继续
                 setTimeout(function() {
-                    if (stepActive) {
-                        stepActive = false;
+                    if (isSpeaking) {
                         isSpeaking = false;
                         document.getElementById('speaking').classList.remove('show');
                         i++;
@@ -2182,15 +2171,14 @@
             ding('no');
             renderProgress();
 
-            if (!isManualLevel && loseStreak >= 2 && level > 1) {
-                level--;
+            if (loseStreak >= 2 && level > 1) {
+                if (!isManualLevel) {
+                    level--;
+                }
                 loseStreak = 0;
                 winStreak = 0;
                 linVoice(`没关系，回到第${level}关。`);
                 renderTrack();
-            } else if (isManualLevel) {
-                // 锁定模式：不退级，重置错误计数
-                loseStreak = 0;
             }
 
             saveProgress();
@@ -2242,6 +2230,7 @@
 
         function startGame() {
             pet = CAT; // 固定猫咪
+            isManualLevel = false;
 
             document.getElementById('startPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
@@ -2276,6 +2265,7 @@
         function restartGame() {
             level = 1; score = 0; total = 0; correct = 0;
             winStreak = 0; loseStreak = 0;
+            isManualLevel = false;
 
             document.getElementById('winPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
@@ -2320,8 +2310,10 @@
             } catch(e) {}
         }
 
-        // ============ 事件绑定（pointerdown 统一处理触摸+鼠标，最可靠） ============
+        // ============ 事件绑定（腾讯 X5 WebView 兼容性 - 双轨 touch+click） ============
         function bindEvents() {
+            // 双轨按钮处理器：touchstart + click 双监听，防止 X5 漏报
+            // touchstart 直接触发，click 兜底；用 busy 标志防重复执行
             function addBtn(id, fn) {
                 var el = document.getElementById(id);
                 if (!el) {
@@ -2329,22 +2321,38 @@
                     return;
                 }
                 var busy = false;
+                var touched = false; // 追踪是否刚触发过 touch
 
                 function exec() {
-                    if (busy) return;
+                    if (busy) {
+                        console.log('[math-game] 按钮 ' + id + ' 被跳过（busy）');
+                        return;
+                    }
                     busy = true;
-                    setTimeout(function() { busy = false; }, 500);
-                    // 即时按下反馈
-                    el.style.transform = 'scale(0.93)';
-                    setTimeout(function() { el.style.transform = ''; }, 120);
+                    touched = true;
+                    setTimeout(function() { busy = false; touched = false; }, 400);
+                    console.log('[math-game] 按钮 ' + id + ' 被触发');
                     fn();
                 }
 
-                // pointerdown: 鼠标和触摸统一处理，不依赖 touchstart/click 双轨
-                el.addEventListener('pointerdown', function(e) {
+                // touchstart：X5 优先触发这个
+                el.addEventListener('touchstart', function(e) {
+                    console.log('[math-game] touchstart 触发:', id);
                     e.preventDefault();
                     e.stopPropagation();
                     exec();
+                }, { passive: false });
+
+                // click：桌面浏览器 / 部分 X5 环境兜底
+                // 只有当没有刚触发过 touch 时才执行（避免 touch 和 click 重复执行）
+                el.addEventListener('click', function(e) {
+                    console.log('[math-game] click 触发:', id, 'touched=', touched);
+                    e.stopPropagation();
+                    // touched=true 说明 touchstart 已触发并执行了，这里跳过
+                    // touched=false 说明没有 touchstart，直接执行
+                    if (!touched && !busy) {
+                        exec();
+                    }
                 });
             }
 
@@ -2409,16 +2417,17 @@
                 });
             }
 
-            // 难度快捷选择按钮（点击选关 + 再次点击锁定/解锁）
+            // 难度快捷选择按钮（选关+锁定，再点同关解锁）
             document.querySelectorAll('.level-quick-btn').forEach(function(btn) {
                 function doSelect() {
                     var targetLevel = parseInt(this.getAttribute('data-level'));
                     if (isNaN(targetLevel) || targetLevel < 1 || targetLevel > 5) return;
 
                     if (isManualLevel && targetLevel === level) {
-                        // 再次点击当前关 → 解锁
+                        // 再点一次当前关 → 解锁
                         isManualLevel = false;
                         renderTrack();
+                        renderProgress();
                         updateLevelQuickHighlight();
                         return;
                     }
@@ -2438,7 +2447,6 @@
                     e.stopPropagation();
                     doSelect.call(this);
                 }, { passive: false });
-
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     doSelect.call(this);
