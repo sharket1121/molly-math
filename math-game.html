@@ -1186,6 +1186,243 @@
             transition: all 0.2s;
         }
         .shop-close:hover { border-color: #c49a6c; color: #c49a6c; }
+
+        /* ========== 排行榜按钮 ========== */
+        .lb-btn {
+            position: absolute;
+            top: 0px;
+            right: 55px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #FFB74D;
+            background: #FFF8E1;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .lb-btn:hover { transform: scale(1.08); border-color: #FF9800; }
+
+        /* ========== 昵称弹窗 ========== */
+        .name-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+        .name-modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .name-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 28px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            transform: scale(0.9);
+            transition: transform 0.25s;
+        }
+        .name-modal-overlay.show .name-modal {
+            transform: scale(1);
+        }
+        .name-modal h3 {
+            font-size: 18px;
+            color: #5a5a5a;
+            margin-bottom: 6px;
+        }
+        .name-modal p {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 16px;
+        }
+        .name-modal input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .name-modal input:focus {
+            border-color: #FFB74D;
+        }
+        .name-modal button {
+            margin-top: 14px;
+            padding: 10px 36px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #FFB74D, #FF9800);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .name-modal button:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 12px rgba(255,152,0,0.3);
+        }
+        .name-modal button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ========== 排行榜弹窗 ========== */
+        #lbOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.35);
+            z-index: 98;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        #lbOverlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #lbPopup {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: white;
+            border-radius: 20px;
+            padding: 24px 20px 16px;
+            width: 90%;
+            max-width: 360px;
+            max-height: 70vh;
+            z-index: 101;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s;
+            display: flex;
+            flex-direction: column;
+        }
+        #lbOverlay.show + #lbPopup,
+        #lbPopup.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .lb-title {
+            font-size: 18px;
+            color: #5a5a5a;
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .lb-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            justify-content: center;
+        }
+        .lb-tab {
+            padding: 6px 16px;
+            border-radius: 15px;
+            border: 1.5px solid #e0e0e0;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #888;
+        }
+        .lb-tab.active {
+            background: #FFF8E1;
+            border-color: #FFB74D;
+            color: #E65100;
+            font-weight: bold;
+        }
+        .lb-list {
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+        .lb-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 8px;
+            border-bottom: 1px solid #f5f5f5;
+            gap: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        .lb-row.me {
+            background: #FFF8E1;
+            border-radius: 10px;
+            border-bottom: none;
+            margin: 2px 0;
+        }
+        .lb-rank {
+            width: 28px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .lb-rank.gold { color: #FFB300; font-size: 18px; }
+        .lb-rank.silver { color: #90A4AE; font-size: 18px; }
+        .lb-rank.bronze { color: #BF7D4F; font-size: 18px; }
+        .lb-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .lb-name {
+            font-weight: bold;
+            color: #4a4a4a;
+        }
+        .lb-detail {
+            font-size: 10px;
+            color: #aaa;
+        }
+        .lb-score {
+            font-weight: bold;
+            color: #FF9800;
+            font-size: 15px;
+            min-width: 50px;
+            text-align: right;
+        }
+        .lb-loading {
+            text-align: center;
+            padding: 30px;
+            color: #aaa;
+            font-size: 13px;
+        }
+        .lb-empty {
+            text-align: center;
+            padding: 30px;
+            color: #ccc;
+            font-size: 14px;
+        }
+        .lb-close {
+            display: block;
+            margin: 14px auto 0;
+            padding: 8px 28px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lb-close:hover { border-color: #c49a6c; color: #c49a6c; }
     </style>
 </head>
 <body>
@@ -1193,6 +1430,7 @@
         <span class="bell-icon" id="bellIcon"><svg viewBox="0 0 24 24" fill="none" stroke="#8d8d8d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
     </button>
     <button class="shop-btn" id="shopBtn">🛒</button>
+    <button class="lb-btn" id="lbBtn">🏆</button>
 
     <!-- 开始页 -->
     <div class="start-page" id="startPage">
@@ -1351,6 +1589,30 @@
         <div class="shop-coins">💰 余额：<b id="shopBalance">0</b> 积分</div>
         <div class="shop-grid" id="shopGrid"></div>
         <button class="shop-close" id="shopCloseBtn">关闭</button>
+    </div>
+
+    <!-- 昵称输入弹窗 -->
+    <div class="name-modal-overlay" id="nameModalOverlay">
+        <div class="name-modal">
+            <h3>🐣 欢迎来到数学小乐园！</h3>
+            <p>给自己取个名字吧～</p>
+            <input type="text" id="nameInput" placeholder="输入你的昵称…" maxlength="8" autocomplete="off">
+            <button id="nameConfirmBtn">开始游戏 →</button>
+        </div>
+    </div>
+
+    <!-- 排行榜弹窗 -->
+    <div id="lbOverlay"></div>
+    <div id="lbPopup">
+        <div class="lb-title">🏆 积分排行榜</div>
+        <div class="lb-tabs">
+            <button class="lb-tab active" data-tab="all">总榜</button>
+            <button class="lb-tab" data-tab="week">周榜</button>
+        </div>
+        <div class="lb-list" id="lbList">
+            <div class="lb-loading">加载中…</div>
+        </div>
+        <button class="lb-close" id="lbCloseBtn">关闭</button>
     </div>
 
     <script>
@@ -1678,6 +1940,8 @@
         let shopCoins = 0;          // 商店积分
         let ownedSkins = [];        // 已拥有的皮肤ID列表
         let currentSkin = null;     // 当前装备的皮肤ID (null=默认猫咪)
+        let playerName = '';        // 玩家昵称
+        const API_BASE = 'https://molly-leaderboard.sharket1121.workers.dev'; // 排行榜API
 
         const LEVEL_NAMES = [
             '十以内加减法',
@@ -1760,6 +2024,150 @@
                 icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="3" y1="3" x2="21" y2="21" stroke="#e53935" stroke-width="2"/></svg>';
                 btn.classList.add('off');
             }
+        }
+
+        // ============ 昵称管理 ============
+        function loadPlayerName() {
+            var saved = localStorage.getItem('mathname');
+            if (saved) {
+                playerName = saved;
+                return true;
+            }
+            return false;
+        }
+
+        function showNicknameModal() {
+            var overlay = document.getElementById('nameModalOverlay');
+            var input = document.getElementById('nameInput');
+            var btn = document.getElementById('nameConfirmBtn');
+            overlay.classList.add('show');
+            input.focus();
+            input.value = '';
+
+            function confirm() {
+                var name = input.value.trim();
+                if (!name) { input.focus(); return; }
+                playerName = name;
+                localStorage.setItem('mathname', name);
+                overlay.classList.remove('show');
+            }
+
+            btn.onclick = confirm;
+            input.onkeydown = function(e) {
+                if (e.key === 'Enter') confirm();
+            };
+        }
+
+        // ============ 排行榜 API ============
+        function setApiBase(url) {
+            var params = new URLSearchParams(window.location.search);
+            var custom = params.get('api');
+            if (custom) {
+                localStorage.setItem('mathapi', custom);
+            }
+            var saved = localStorage.getItem('mathapi');
+            return saved || url;
+        }
+
+        function apiFetch(path, opts) {
+            var base = setApiBase(API_BASE);
+            var url2 = base + path;
+            return fetch(url2, opts).then(function(r) {
+                if (!r.ok) throw new Error('API error ' + r.status);
+                return r.json();
+            });
+        }
+
+        function submitScore(score, level, accuracy, timeSec) {
+            if (!playerName) return;
+            var skinName = currentSkin && BIRD_SKINS[currentSkin] ? BIRD_SKINS[currentSkin].name : '小猫咪';
+            return apiFetch('/scores', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: playerName,
+                    score: score,
+                    level: level,
+                    accuracy: accuracy,
+                    time: timeSec,
+                    skin: skinName
+                })
+            }).catch(function() {
+                // API 不可用时静默失败
+            });
+        }
+
+        function fetchLeaderboard(type) {
+            var path = '/scores?limit=50';
+            if (type === 'week') path += '&week=1';
+            return apiFetch(path).catch(function() {
+                return [];
+            });
+        }
+
+        function renderLeaderboard(scores) {
+            var list = document.getElementById('lbList');
+            if (!scores || scores.length === 0) {
+                list.innerHTML = '<div class="lb-empty">还没有人上榜，快来拿第一！🥇</div>';
+                return;
+            }
+            var html = '';
+            scores.forEach(function(s, i) {
+                var rank = i + 1;
+                var rankCls = '';
+                var rankIcon = rank;
+                if (rank === 1) { rankCls = 'gold'; rankIcon = '🥇'; }
+                else if (rank === 2) { rankCls = 'silver'; rankIcon = '🥈'; }
+                else if (rank === 3) { rankCls = 'bronze'; rankIcon = '🥉'; }
+                var isMe = playerName && s.name === playerName;
+                html += '<div class="lb-row' + (isMe ? ' me' : '') + '">'
+                    + '<div class="lb-rank ' + rankCls + '">' + rankIcon + '</div>'
+                    + '<div class="lb-info">'
+                    + '<div class="lb-name">' + escHtml(s.name) + '</div>'
+                    + '<div class="lb-detail">第' + s.level + '关 · 正确率' + s.accuracy + '% · ' + fmtTime(s.time) + '</div>'
+                    + '</div>'
+                    + '<div class="lb-score">' + s.score + '💰</div>'
+                    + '</div>';
+            });
+            list.innerHTML = html;
+        }
+
+        function escHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function fmtTime(sec) {
+            if (!sec && sec !== 0) return '--';
+            var m = Math.floor(sec / 60);
+            var s = Math.floor(sec % 60);
+            return m > 0 ? m + '分' + s + '秒' : s + '秒';
+        }
+
+        function showLeaderboard(type) {
+            type = type || 'all';
+            var overlay = document.getElementById('lbOverlay');
+            var popup = document.getElementById('lbPopup');
+            var list = document.getElementById('lbList');
+            list.innerHTML = '<div class="lb-loading">加载中…</div>';
+            overlay.classList.add('show');
+            popup.classList.add('show');
+
+            document.querySelectorAll('.lb-tab').forEach(function(t) {
+                t.classList.toggle('active', t.dataset.tab === type);
+            });
+
+            fetchLeaderboard(type).then(function(scores) {
+                renderLeaderboard(scores);
+            }).catch(function() {
+                list.innerHTML = '<div class="lb-empty">无法连接排行榜服务器 😢<br><small>请检查网络后重试</small></div>';
+            });
+        }
+
+        function hideLeaderboard() {
+            document.getElementById('lbOverlay').classList.remove('show');
+            document.getElementById('lbPopup').classList.remove('show');
         }
 
         // ============ 林志玲风格语音 ============
@@ -2806,6 +3214,9 @@
             ding('ok');
             linVoice('太棒了！全部通关！你真是个数学小天才！');
 
+            // 提交积分到排行榜
+            submitScore(score, level, rate, Math.round(totalTimeMs / 1000));
+
             localStorage.removeItem('mathpet');
         }
 
@@ -3144,8 +3555,41 @@
         // ============ 初始化（DOM加载后执行——解决触摸设备不触发问题） ============
         function doInit() {
             try {
+                // 昵称：首次访问弹窗，之后自动读取
+                if (!loadPlayerName()) {
+                    showNicknameModal();
+                }
+
+                // 排行榜按钮
+                var lbBtn = document.getElementById('lbBtn');
+                if (lbBtn) {
+                    addBtn('lbBtn', function() { showLeaderboard('all'); });
+                }
+
+                // 排行榜 tab 切换
+                document.querySelectorAll('.lb-tab').forEach(function(tab) {
+                    tab.addEventListener('click', function() {
+                        showLeaderboard(tab.dataset.tab);
+                    });
+                });
+
+                // 排行榜关闭
+                var lbCloseBtn = document.getElementById('lbCloseBtn');
+                if (lbCloseBtn) {
+                    addBtn('lbCloseBtn', hideLeaderboard);
+                }
+                var lbOverlay = document.getElementById('lbOverlay');
+                if (lbOverlay) {
+                    (function(el) {
+                        var busy = false;
+                        function exec() { if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); hideLeaderboard(); }
+                        el.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                        el.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                    })(lbOverlay);
+                }
+
                 initAnimals();
-                updateCatMood('neutral'); // 初始化猫咪表情
+                updateCatMood('neutral');
                 bindEvents();
                 console.log('[math-game] 初始化完成，事件绑定成功');
             } catch(e) {
