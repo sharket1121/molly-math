@@ -948,8 +948,8 @@ function submitAnswer(){
           G.level++; G.winStreak=0;
           sfxUp();
           renderTrack(); saveData();
-          speak(`太棒了！进入第${G.level}关！${LV_NAMES[G.level-1]}！`,()=>newProblem());
-          setTimeout(()=>newProblem(), 2000);
+          speak(`太棒了！进入第${G.level}关！${LV_NAMES[G.level-1]}！`);
+          setTimeout(()=>newProblem(), 1500);
         } else {
           showWin();
         }
@@ -977,8 +977,8 @@ function submitAnswer(){
         closePopup();
         G.level--; G.loseStreak=0; G.winStreak=0;
         sfxNg(); renderTrack(); saveData();
-        speak(`没关系，回到第${G.level}关再练练。`,()=>newProblem());
-        setTimeout(()=>newProblem(), 2000);
+        speak(`没关系，回到第${G.level}关再练练。`);
+        setTimeout(()=>newProblem(), 1500);
       },1300);
       return;
     }
@@ -1124,6 +1124,9 @@ function showWin(){
 function startGame(){
   if(G.starting) return;
   G.starting=true;
+  // 即时按钮反馈
+  D.startBtn.style.transform='scale(.92)';
+  setTimeout(()=>D.startBtn.style.transform='', 150);
   sfxClick();
   loadData();
   D.startPage.style.display='none';
@@ -1133,11 +1136,9 @@ function startGame(){
   G.winStreak=0; G.loseStreak=0;
   G.correct=0; G.total=0; G.score=0;
   renderTrack();
-  // 语音播报，加1.5s超时兜底防止移动端语音加载失败导致游戏卡死
-  let started=false;
-  const go=()=>{ if(!started){ started=true; newProblem(); } };
-  speak(`第${G.level}关，${LV_NAMES[G.level-1]}，开始！`,go);
-  setTimeout(go, 1500);
+  newProblem();
+  // 语音仅作背景音，fire-and-forget 不影响游戏启动
+  speak(`第${G.level}关，${LV_NAMES[G.level-1]}，开始！`);
 }
 
 function restartGame(){
@@ -1149,10 +1150,8 @@ function restartGame(){
   D.gameBody.classList.add('on');
   G.running=true;
   renderTrack();
-  let started=false;
-  const go=()=>{ if(!started){ started=true; newProblem(); } };
-  speak('重新开始！第1关，加油！',go);
-  setTimeout(go, 1500);
+  newProblem();
+  speak('重新开始！第1关，加油！');
 }
 
 // ════════════════════════════════════════════
@@ -1198,6 +1197,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged=()=>{};
 
   D.startBtn.addEventListener('click',  startGame);
+  D.startBtn.addEventListener('pointerdown',  startGame);
   D.submitBtn.addEventListener('click', submitAnswer);
   D.skipBtn.addEventListener('click',   skipProblem);
   D.hintBtn.addEventListener('click',   showHint);
@@ -1227,8 +1227,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     renderTrack(); renderProg();
     saveData();
     stopSpeak();
-    speak(`第${lv}关，${LV_NAMES[lv-1]}`,()=>newProblem());
-    setTimeout(()=>newProblem(), 2000);
+    newProblem();
+    speak(`第${lv}关，${LV_NAMES[lv-1]}`);
   });
 });
 </script>
