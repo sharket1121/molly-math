@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学小乐园</title>
+    <!-- Google Fonts 思源黑体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- 移动端调试工具（生产环境可注释掉）
+    <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script> -->
+    <style>
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            cursor: pointer;
+        }
+        input, textarea {
+            touch-action: auto;
+            -webkit-user-select: text;
+            user-select: text;
+            cursor: text;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "HanHei SC", sans-serif;
+            background: linear-gradient(180deg, #fdf6f0 0%, #fef9f3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #4a4a4a;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .title {
+            font-size: 24px;
+            color: #5a5a5a;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .animal-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .animal-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #e8e0d8;
+            background: white;
+            cursor: pointer;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .animal-btn:hover {
+            transform: scale(1.08);
+            border-color: #d4a574;
+        }
+
+        .animal-btn.selected {
+            border-color: #c49a6c;
+            background: #faf5ef;
+        }
+
+        /* ========== 可爱猫咪头像（SVG） ========== */
+        .pet-icon {
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+        .pet-icon.small  { width: 28px; height: 28px; }
+        .pet-icon.medium { width: 36px; height: 36px; }
+        .pet-icon.large  { width: 56px; height: 56px; }
+        .pet-icon.xlarge { width: 80px; height: 80px; }
+
+        .game-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            max-width: 480px;
+            width: 100%;
+        }
+
+        /* 难度进度 */
+        .level-track {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .level-track::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: #e8e0d8;
+            border-radius: 2px;
+        }
+
+        .level-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #e8e0d8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #bbb;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .level-dot.done {
+            background: #e8f5e9;
+            border-color: #81c784;
+            color: #4caf50;
+        }
+
+        .level-dot.current {
+            background: #fff8e1;
+            border-color: #ffb74d;
+            color: #f57c00;
+            transform: scale(1.15);
+            box-shadow: 0 2px 10px rgba(255,183,77,0.3);
+        }
+
+        .level-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding: 0 2px;
+        }
+
+        .level-label {
+            font-size: 9px;
+            color: #bbb;
+            text-align: center;
+            width: 45px;
+            line-height: 1.3;
+        }
+
+        .level-label.current {
+            color: #f57c00;
+            font-weight: bold;
+        }
+
+        /* 题目区 */
+        .problem-box {
+            background: linear-gradient(135deg, #78909c 0%, #607d8b 100%);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .level-tag {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffe0b2;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #e65100;
+        }
+
+        .problem-text {
+            font-size: 42px;
+            color: white;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin: 10px 0;
+        }
+
+        .streak-hint {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* 竖式计算区域 */
+        .vertical-calc {
+            background: #fffde7;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px auto;
+            display: inline-block;
+            border: 2px dashed #ffd54f;
+            min-height: 240px;
+            position: relative;
+        }
+
+        .vertical-calc.hidden { display: none; }
+
+        .v-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #5a5a5a;
+            height: 42px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease-out;
+        }
+
+        .v-row.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .v-row.highlight {
+            color: #e65100;
+            transform: scale(1.05);
+        }
+
+        .v-space { height: 8px; }
+
+        .v-op {
+            font-size: 36px;
+            color: #78909c;
+        }
+
+        .v-num {
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .v-num span {
+            display: inline-block;
+        }
+
+        .v-num .digit {
+            transition: all 0.3s;
+        }
+
+        .v-num .digit.appear {
+            animation: popIn 0.3s ease-out;
+        }
+
+        .v-num .digit.carry {
+            color: #f44336;
+            font-size: 20px;
+            vertical-align: top;
+            margin-top: -5px;
+        }
+
+        .v-num .digit.borrow {
+            color: #f44336;
+            font-size: 20px;
+            vertical-align: top;
+            margin-top: -5px;
+        }
+
+        .v-line {
+            width: 120px;
+            height: 3px;
+            background: #5a5a5a;
+            margin: 0 auto;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .v-line.show { opacity: 1; }
+
+        .v-result {
+            color: #4caf50;
+            font-size: 36px;
+        }
+
+        .v-answer {
+            color: #4caf50;
+            font-size: 42px;
+            font-weight: bold;
+        }
+
+        .v-arrow {
+            position: absolute;
+            font-size: 18px;
+            color: #f44336;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .v-arrow.show { opacity: 1; }
+
+        .v-carry-text {
+            font-size: 14px;
+            color: #f44336;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to   { transform: translateY(-8px); }
+        }
+
+        @keyframes catBounce {
+            0%   { transform: scale(1) rotate(0deg); }
+            25%  { transform: scale(1.15) rotate(-5deg); }
+            50%  { transform: scale(1.05) rotate(5deg); }
+            75%  { transform: scale(1.1) rotate(-3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        @keyframes catShake {
+            0%, 100% { transform: translateX(0); }
+            20%  { transform: translateX(-6px) rotate(-5deg); }
+            40%  { transform: translateX(6px) rotate(5deg); }
+            60%  { transform: translateX(-4px) rotate(-3deg); }
+            80%  { transform: translateX(4px) rotate(3deg); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes highlightRow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); background: rgba(255,213,79,0.3); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .v-row.hightlight-anim {
+            animation: highlightRow 0.5s ease-in-out;
+        }
+
+        /* 讲解区 */
+        .explain-box {
+            background: #fefcf9;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 18px;
+            border: 2px solid #f5efe8;
+            display: none;
+        }
+
+        .explain-box.show { display: block; }
+
+        .explain-title {
+            font-size: 14px;
+            color: #c49a6c;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .explain-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.3s;
+            border: 1px solid #f0ebe3;
+        }
+
+        .explain-step.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .explain-step.active {
+            border-color: #d4a574;
+            background: #faf5ef;
+        }
+
+        .step-num {
+            width: 22px;
+            height: 22px;
+            background: #e8e0d8;
+            color: #8d8d8d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .explain-step.active .step-num {
+            background: #c49a6c;
+            color: white;
+        }
+
+        .step-content {
+            font-size: 14px;
+            color: #5a5a5a;
+            line-height: 1.5;
+        }
+
+        .step-content .n { color: #c49a6c; font-weight: bold; }
+        .step-content .r { color: #81c784; font-weight: bold; }
+
+        /* ========== CSS图标 ========== */
+        .icon-bulb {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: #ffb74d;
+            border-radius: 50% 50% 40% 40%;
+            position: relative;
+            vertical-align: middle;
+        }
+        .icon-bulb::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 4px;
+            background: #ffa726;
+            border-radius: 0 0 3px 3px;
+        }
+
+        .icon-sound {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            position: relative;
+        }
+        .icon-sound::before {
+            content: '';
+            width: 8px;
+            height: 10px;
+            background: #8d8d8d;
+            border-radius: 0 4px 4px 0;
+        }
+        .icon-sound::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border: 2px solid #8d8d8d;
+            border-left: none;
+            border-radius: 0 50% 50% 0;
+            margin-left: -1px;
+        }
+
+        .icon-sound-off {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            position: relative;
+        }
+        .icon-sound-off::before {
+            content: '';
+            width: 8px;
+            height: 10px;
+            background: #ccc;
+            border-radius: 0 4px 4px 0;
+        }
+        .icon-sound-off::after {
+            content: '';
+            width: 14px;
+            height: 2px;
+            background: #e53935;
+            transform: rotate(45deg);
+            position: absolute;
+        }
+
+        .speak-btn {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e8e0d8;
+            border-radius: 10px;
+            background: white;
+            color: #8d8d8d;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .speak-btn:hover {
+            border-color: #c49a6c;
+            color: #c49a6c;
+        }
+
+        /* 输入区 */
+        .answer-input {
+            width: 120px;
+            height: 52px;
+            font-size: 28px;
+            text-align: center;
+            border: 2px solid #e8e0d8;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .answer-input:focus {
+            border-color: #c49a6c;
+            box-shadow: 0 0 0 3px rgba(196,154,108,0.15);
+        }
+
+        .submit-btn {
+            height: 52px;
+            padding: 0 25px;
+            background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(129,199,132,0.3);
+        }
+
+        /* 操作按钮 */
+        .action-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 9px 18px;
+            border: 2px solid #e8e0d8;
+            border-radius: 20px;
+            background: white;
+            font-size: 13px;
+            color: #8d8d8d;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: #c49a6c;
+            color: #c49a6c;
+        }
+
+        .action-btn.secondary {
+            color: #e57373;
+            border-color: #ffcdd2;
+        }
+        .action-btn.secondary:hover {
+            border-color: #e57373;
+            color: #e57373;
+            background: #fff5f5;
+        }
+
+        /* 输入框点击区域 */
+        .input-row {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .input-click-area {
+            position: absolute;
+            /* 只覆盖输入框，不覆盖回答按钮 */
+            left: 0;
+            width: calc(120px + 12px + 24px); /* 输入框+gap+padding */
+            top: 0; bottom: 0;
+            z-index: 1;
+            cursor: text;
+        }
+        .input-click-area:active { cursor: text; }
+        .answer-input {
+            position: relative;
+            z-index: 2;
+        }
+        .submit-btn {
+            position: relative;
+            z-index: 3; /* 确保按钮在点击区域之上 */
+        }
+
+        /* 难度快捷选择 */
+        .level-quick-select {
+            margin-top: 12px;
+            padding: 12px 15px;
+            background: #faf5ef;
+            border-radius: 12px;
+            border: 1px dashed #e8e0d8;
+        }
+        .level-quick-select.hidden { display: none; }
+        .level-quick-label {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .level-quick-btns {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .level-quick-btn {
+            padding: 5px 10px;
+            border: 1px solid #e8e0d8;
+            border-radius: 15px;
+            background: white;
+            font-size: 11px;
+            color: #8d8d8d;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .level-quick-btn:hover,
+        .level-quick-btn.active {
+            border-color: #c49a6c;
+            color: #c49a6c;
+            background: #faf5ef;
+        }
+
+        /* 进度条 */
+        .progress-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+
+        .mini-stat {
+            font-size: 12px;
+            color: #bbb;
+        }
+
+        .mini-stat span {
+            color: #c49a6c;
+            font-weight: bold;
+        }
+
+        .mini-bar {
+            flex: 1;
+            height: 6px;
+            background: #f0ebe3;
+            border-radius: 3px;
+            margin: 0 12px;
+            overflow: hidden;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffcc80, #ffb74d);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .lock-stats { margin-bottom: 12px; }
+        .lock-stats.hidden { display: none; }
+        .lock-stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .lock-stats-row b { color: #c49a6c; font-size: 13px; }
+        .milestone {
+            text-align: center;
+            margin-top: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #ff9800;
+        }
+        .milestone.hidden { display: none; }
+
+        /* 反馈弹窗 */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 99;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.85);
+            background: white;
+            padding: 35px;
+            border-radius: 24px;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: all 0.25s;
+        }
+
+        .popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .popup.correct { border: 3px solid #a5d6a7; }
+        .popup.wrong { border: 3px solid #ef9a9a; }
+
+        /* 纯CSS弹窗图标 */
+        .popup-icon {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-star {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-star svg { width: 55px; height: 55px; }
+
+        .icon-check {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-check svg { width: 55px; height: 55px; }
+
+        .icon-circle-ok {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-circle-ok svg { width: 55px; height: 55px; }
+
+        .icon-circle-x {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-circle-x svg { width: 55px; height: 55px; }
+
+        .popup-title {
+            font-size: 20px;
+            color: #5a5a5a;
+            margin-bottom: 6px;
+        }
+
+        .popup-detail {
+            font-size: 13px;
+            color: #999;
+        }
+
+        /* ========== 动物图标（CSS纯色） ========== */
+        .animal-icon {
+            display: inline-block;
+            border-radius: 50%;
+            background: #e0e0e0;
+            vertical-align: middle;
+        }
+        .animal-icon.large {
+            width: 48px; height: 48px; font-size: 24px; line-height: 48px;
+        }
+        .animal-icon:not(.large) {
+            width: 28px; height: 28px; font-size: 14px; line-height: 28px;
+        }
+
+        /* 开始页 */
+        .start-page {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .start-title {
+            font-size: 22px;
+            color: #5a5a5a;
+            margin-bottom: 10px;
+        }
+
+        .start-desc {
+            font-size: 13px;
+            color: #999;
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+
+        .start-btn {
+            display: inline-block;
+            padding: 14px 45px;
+            background: linear-gradient(135deg, #78909c 0%, #607d8b 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(96,125,139,0.3);
+        }
+
+        .start-btn:active,
+        .start-btn.touch-active {
+            transform: translateY(0) scale(0.96);
+        }
+
+        /* 通关页 */
+        .win-page {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .win-title {
+            font-size: 22px;
+            color: #5a5a5a;
+            margin-bottom: 15px;
+        }
+
+        .win-stats {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 20px 0;
+        }
+
+        .win-stat-val {
+            font-size: 28px;
+            font-weight: bold;
+            color: #c49a6c;
+        }
+
+        .win-stat-label {
+            font-size: 11px;
+            color: #bbb;
+        }
+
+        .stars {
+            font-size: 35px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .star-filled {
+            color: #ffc107;
+            font-size: 35px;
+        }
+        .star-empty {
+            color: #e0e0e0;
+            font-size: 35px;
+        }
+
+        /* 语音动画 */
+        .speaking {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
+        .speaking.show { display: flex; }
+
+        .wave-bar {
+            width: 3px;
+            height: 12px;
+            background: #c49a6c;
+            border-radius: 2px;
+            animation: wave 0.8s ease-in-out infinite;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes wave {
+            0%, 100% { height: 5px; }
+            50% { height: 15px; }
+        }
+
+        /* 星星动画 */
+        .star-fly {
+            position: fixed;
+            pointer-events: none;
+            animation: fly 0.8s ease-out forwards;
+            z-index: 200;
+        }
+
+        .star-fly svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        @keyframes fly {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--dx), -80px) scale(0.5); }
+        }
+
+        /* 音效开关 */
+        .sound-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid #e8e0d8;
+            background: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 100;
+            padding: 0;
+        }
+
+        .sound-btn:hover { transform: scale(1.08); }
+        .sound-btn.off { opacity: 0.4; }
+
+        .game-body { display: none; }
+        .game-body.active { display: block; }
+
+        /* 看竖式按钮高亮 */
+        .show-vertical-btn {
+            background: #fff3e0 !important;
+            border-color: #ffb74d !important;
+            color: #e65100 !important;
+        }
+
+        /* 纯CSS铃声按钮内容 */
+        .bell-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+        .bell-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        .bell-icon-off {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+        .bell-icon-off svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 重玩按钮的循环箭头 */
+        .icon-replay {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2.5px solid currentColor;
+            border-radius: 50%;
+            border-top-color: transparent;
+            position: relative;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+        .icon-replay::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: -3px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid currentColor;
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
+        }
+    </style>
+</head>
+<body>
+    <button class="sound-btn" id="soundBtn">
+        <span class="bell-icon" id="bellIcon"><svg viewBox="0 0 24 24" fill="none" stroke="#8d8d8d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+    </button>
+
+    <!-- 开始页 -->
+    <div class="start-page" id="startPage">
+        <div class="start-animals" id="startAnimals"></div>
+        <div class="start-title">数学小乐园</div>
+        <div class="start-desc">
+            和小猫咪一起闯关吧！<br>
+            连续答对5题进入下一关<br>
+            连续答错2题回到上一关
+        </div>
+        <button class="start-btn" id="startBtn">开始闯关 ★</button>
+    </div>
+
+    <!-- 游戏主体 -->
+    <div class="game-body" id="gameBody">
+        <div class="header">
+            <div class="title">和小猫咪一起学数学</div>
+            <div class="subtitle">加油哦~</div>
+        </div>
+
+        <div class="game-card">
+            <!-- 难度轨道 -->
+            <div class="level-track" id="levelTrack"></div>
+            <div class="level-labels" id="levelLabels"></div>
+
+            <!-- 进度 -->
+            <div class="progress-row">
+                <div class="mini-stat">答对 <span id="winCount">0</span>/5</div>
+                <div class="mini-bar"><div class="mini-bar-fill" id="winBar" style="width:0%"></div></div>
+                <div class="mini-stat">答错 <span id="loseCount">0</span>/2</div>
+            </div>
+
+            <!-- 锁定模式统计（选关锁定后显示） -->
+            <div class="lock-stats hidden" id="lockStats">
+                <div class="lock-stats-row">
+                    <span>做题 <b id="lsTotal">0</b></span>
+                    <span>答对 <b id="lsCorrect">0</b></span>
+                    <span>正确率 <b id="lsRate">--</b></span>
+                </div>
+                <div class="milestone hidden" id="milestoneMsg"></div>
+            </div>
+
+            <!-- 题目 -->
+            <div class="problem-box">
+                <div class="level-tag" id="levelTag">第1关 · 十以内加减法</div>
+                <!-- 猫咪表情区（答题反馈时变化） -->
+                <div id="catMood" style="display:flex;justify-content:center;margin-bottom:8px;"></div>
+                <div class="problem-text" id="problemText">5 + 3 = ?</div>
+
+                <!-- 竖式计算区域（level 5显示） -->
+                <div class="vertical-calc hidden" id="verticalCalc">
+                    <!-- 第1行：被加数/被减数a（动画第0步填入） -->
+                    <div class="v-row" id="vRow0"></div>
+                    <!-- 第2行：加号/减号 + 加数/减数b（动画第1步填入） -->
+                    <div class="v-row" id="vRow1"></div>
+                    <!-- 第3行：横线（动画第2步显示） -->
+                    <div class="v-row" id="vLineRow"><div class="v-line" id="vLine"></div></div>
+                    <!-- 第4行：计算过程（借位标记 or 中间结果）（动画第3步填入） -->
+                    <div class="v-row" id="vResultRow"></div>
+                    <!-- 第4.5行：答案上方的横线（动画插入） -->
+                    <div class="v-row show"><div class="v-line" id="vLine2" style="width:80px;opacity:0;transition:opacity 0.3s;"></div></div>
+                    <!-- 第5行：最终答案（动画最后一步填入） -->
+                    <div class="v-row" id="vAnsRow"></div>
+                </div>
+
+                <div class="streak-hint" id="streakHint">连续答对就能过关~</div>
+            </div>
+
+            <!-- 讲解 -->
+            <div class="explain-box" id="explainBox">
+                <div class="explain-title"><span class="icon-bulb"></span> <span id="explainTitle">解题方法</span></div>
+                <div id="explainSteps"></div>
+                <button class="speak-btn" id="speakBtn2"><span class="icon-sound"></span> 点击听讲解</button>
+                <div class="speaking" id="speaking">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+            </div>
+
+            <!-- 输入 -->
+            <div class="input-row" id="inputRow">
+                <div class="input-click-area" id="inputClickArea"></div>
+                <input type="text" inputmode="numeric" enterkeyhint="done"
+                       class="answer-input" id="answerInput"
+                       placeholder="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button class="submit-btn" id="submitBtn">回答</button>
+            </div>
+
+            <div class="action-row">
+                <button class="action-btn secondary" id="restartMidBtn">重新开始</button>
+                <button class="action-btn" id="skipBtn">跳过此题 ▸</button>
+                <button class="action-btn" id="showSolBtn">看方法</button>
+            </div>
+
+            <!-- 难度快捷选择（答题过程中可见） -->
+            <div class="level-quick-select hidden" id="levelQuickSelect">
+                <div class="level-quick-label">切换难度：</div>
+                <div class="level-quick-btns">
+                    <button class="level-quick-btn" data-level="1">第1关</button>
+                    <button class="level-quick-btn" data-level="2">第2关</button>
+                    <button class="level-quick-btn" data-level="3">第3关</button>
+                    <button class="level-quick-btn" data-level="4">第4关</button>
+                    <button class="level-quick-btn" data-level="5">第5关</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通关页 -->
+    <div class="win-page" id="winPage" style="display:none;">
+        <div id="winEmoji"></div>
+        <div class="win-title">恭喜通关!</div>
+        <div class="stars" id="winStars"></div>
+        <div class="win-stats">
+            <div class="win-stat">
+                <div class="win-stat-val" id="winScore">0</div>
+                <div class="win-stat-label">总分</div>
+            </div>
+            <div class="win-stat">
+                <div class="win-stat-val" id="winRate">0%</div>
+                <div class="win-stat-label">正确率</div>
+            </div>
+        </div>
+        <button class="start-btn" id="restartBtn"><span class="icon-replay"></span>再玩一次</button>
+    </div>
+
+    <!-- 反馈弹窗 -->
+    <div class="overlay" id="overlay"></div>
+    <div class="popup" id="popup">
+        <div class="popup-icon" id="popupIcon"></div>
+        <div class="popup-title" id="popupTitle">正确!</div>
+        <div class="popup-detail" id="popupDetail"></div>
+    </div>
+
+    <script>
+        // ============ 可爱猫咪定义（多表情） ============
+        function catSVG(size, mood) {
+            mood = mood || 'neutral';
+            var w = { small: 28, medium: 36, large: 56, xlarge: 80 }[size] || 36;
+            var eyes, mouth, blush;
+            if (mood === 'happy') {
+                eyes  = '<path d="M16,30 Q19,27 22,30" stroke="#4A4A4A" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+                      + '<path d="M42,30 Q45,27 48,30" stroke="#4A4A4A" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+                mouth = '<path d="M26,42 Q32,50 38,42" fill="none" stroke="#FF7043" stroke-width="2" stroke-linecap="round"/>';
+                blush = '<ellipse cx="12" cy="38" rx="6" ry="4" fill="#FFAB91" opacity="0.7"/>'
+                      + '<ellipse cx="52" cy="38" rx="6" ry="4" fill="#FFAB91" opacity="0.7"/>';
+            } else if (mood === 'sad') {
+                eyes  = '<ellipse cx="19" cy="32" rx="4.5" ry="5.5" fill="#4A4A4A"/>'
+                      + '<ellipse cx="45" cy="32" rx="4.5" ry="5.5" fill="#4A4A4A"/>'
+                      + '<circle cx="20" cy="30" r="1.5" fill="white"/>'
+                      + '<circle cx="46" cy="30" r="1.5" fill="white"/>'
+                      + '<line x1="14" y1="26" x2="22" y2="28" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round"/>'
+                      + '<line x1="50" y1="26" x2="42" y2="28" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round"/>';
+                mouth = '<path d="M26,46 Q32,40 38,46" fill="none" stroke="#FF7043" stroke-width="2" stroke-linecap="round"/>';
+                blush = '<ellipse cx="12" cy="42" rx="5" ry="3" fill="#FFAB91" opacity="0.35"/>'
+                      + '<ellipse cx="52" cy="42" rx="5" ry="3" fill="#FFAB91" opacity="0.35"/>';
+            } else {
+                // neutral
+                eyes  = '<ellipse cx="19" cy="32" rx="4.5" ry="5.5" fill="#4A4A4A"/>'
+                      + '<ellipse cx="45" cy="32" rx="4.5" ry="5.5" fill="#4A4A4A"/>'
+                      + '<circle cx="20" cy="30" r="1.5" fill="white"/>'
+                      + '<circle cx="46" cy="30" r="1.5" fill="white"/>';
+                mouth = '<path d="M26,44 Q32,48 38,44" fill="none" stroke="#FF7043" stroke-width="2" stroke-linecap="round"/>';
+                blush = '<ellipse cx="12" cy="40" rx="5" ry="3" fill="#FFAB91" opacity="0.5"/>'
+                      + '<ellipse cx="52" cy="40" rx="5" ry="3" fill="#FFAB91" opacity="0.5"/>';
+            }
+            return `<svg class="pet-icon ${size} cat-${mood}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 耳朵（圆润） -->
+  <ellipse cx="11" cy="20" rx="11" ry="16" fill="#FF9A44" transform="rotate(-15 11 20)"/>
+  <ellipse cx="53" cy="20" rx="11" ry="16" fill="#FF9A44" transform="rotate(15 53 20)"/>
+  <ellipse cx="12" cy="21" rx="7" ry="10" fill="#FFCBA4" transform="rotate(-15 12 21)"/>
+  <ellipse cx="52" cy="21" rx="7" ry="10" fill="#FFCBA4" transform="rotate(15 52 21)"/>
+  <!-- 脸部（圆润椭圆） -->
+  <ellipse cx="32" cy="38" rx="26" ry="24" fill="#FF9A44"/>
+  <!-- 脸部高光 -->
+  <ellipse cx="24" cy="28" rx="6" ry="4" fill="white" opacity="0.2" transform="rotate(-20 24 28)"/>
+  <!-- 白色脸颊/下巴 -->
+  <ellipse cx="32" cy="46" rx="16" ry="11" fill="#FFF3E0"/>
+  <!-- 眼睛 -->
+  ${eyes}
+  <!-- 鼻子 -->
+  <ellipse cx="32" cy="40" rx="3" ry="2.2" fill="#FF7043"/>
+  <!-- 嘴巴 -->
+  ${mouth}
+  <!-- 腮红 -->
+  ${blush}
+  <!-- 胡须 -->
+  <line x1="4" y1="38" x2="16" y2="40" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="4" y1="43" x2="16" y2="43" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="5" y1="48" x2="16" y2="46" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="60" y1="38" x2="48" y2="40" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="60" y1="43" x2="48" y2="43" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="59" y1="48" x2="48" y2="46" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+</svg>`;
+        }
+
+        const CAT = {
+            label: '小猫咪',
+            svg: function(size, mood) { return catSVG(size, mood); }
+        };
+
+        // 兼容旧接口
+        function animalHTML(animal, size) {
+            return CAT.svg(size, 'neutral');
+        }
+
+        // 初始化开始页（固定显示一只可爱的猫咪）
+        function initAnimals() {
+            const startDiv = document.getElementById('startAnimals');
+            startDiv.innerHTML = '<div style="animation:bounce 1.2s ease-in-out infinite alternate;display:flex;justify-content:center;">' +
+                CAT.svg('xlarge', 'neutral') + '</div>';
+        }
+
+        // ============ 状态 ============
+        let pet = CAT;
+        let level = 1;
+        let currentCatMood = 'neutral'; // 'neutral' | 'happy' | 'sad'
+
+        function updateCatMood(mood) {
+            currentCatMood = mood;
+            var el = document.getElementById('catMood');
+            if (el) {
+                el.innerHTML = '<div style="animation:bounce 1.5s ease-in-out infinite alternate;display:flex;justify-content:center;">' + CAT.svg('large', mood) + '</div>';
+                el.style.animation = 'none';
+                el.offsetHeight; // force reflow
+                if (mood === 'happy') {
+                    el.style.animation = 'catBounce 0.5s ease';
+                } else if (mood === 'sad') {
+                    el.style.animation = 'catShake 0.5s ease';
+                }
+                // 2.5秒后自动恢复中性表情
+                clearTimeout(window._catMoodTimer);
+                window._catMoodTimer = setTimeout(function() {
+                    updateCatMood('neutral');
+                }, 2500);
+            }
+        }
+        let score = 0;
+        let total = 0;
+        let correct = 0;
+        let winStreak = 0;
+        let loseStreak = 0;
+        let problem = null;
+        let soundOn = true;
+        let isSpeaking = false;
+        let steps = [];
+        let verticalSteps = [];
+        let isManualLevel = false; // 手动选关锁定
+        let lockTotal = 0;          // 锁定模式下做题总数
+        let lockCorrect = 0;        // 锁定模式下答对数
+
+        const LEVEL_NAMES = [
+            '十以内加减法',
+            '十几加减几',
+            '二十以内加减',
+            '两位数加减整十',
+            '百以内不进退位'
+        ];
+
+        // ============ SVG图标定义 ============
+        const SVG_STAR = '<svg viewBox="0 0 24 24" fill="#ffc107" stroke="#ffb300" stroke-width="0.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+
+        const SVG_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><polyline points="8,12 11,15 16,9"/></svg>';
+
+        const SVG_CIRCLE_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="#81c784" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5"/></svg>';
+
+        const SVG_CIRCLE_X = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10" fill="#ffebee"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
+
+        const SVG_STAR_SMALL = '<svg viewBox="0 0 24 24" width="28" height="28" fill="#ffc107" stroke="#ffb300" stroke-width="0.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+
+        const SVG_STAR_EMPTY = '<svg viewBox="0 0 24 24" width="28" height="28" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="0.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+
+        const SVG_STAR_FLY = '<svg viewBox="0 0 24 24" fill="#ffc107"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+
+        const CORRECT_ICONS = [SVG_STAR, SVG_CHECK, SVG_CIRCLE_OK];
+        const WRONG_ICON = SVG_CIRCLE_X;
+
+        function getPopupIconHTML(isCorrect) {
+            if (isCorrect) {
+                return '<div class="icon-star">' + CORRECT_ICONS[Math.floor(Math.random() * CORRECT_ICONS.length)] + '</div>';
+            } else {
+                return '<div class="icon-circle-x">' + WRONG_ICON + '</div>';
+            }
+        }
+
+        // ============ 音频 ============
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function ding(type) {
+            if (!soundOn) return;
+            initAudio();
+            const t = audioCtx.currentTime;
+            if (type === 'ok') {
+                [[523,0,0.12],[659,0.1,0.15],[784,0.22,0.2]].forEach(([f,delay,dur]) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.type = 'sine';
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.frequency.value = f;
+                    g.gain.setValueAtTime(0, t+delay);
+                    g.gain.linearRampToValueAtTime(0.18, t+delay+0.02);
+                    g.gain.exponentialRampToValueAtTime(0.001, t+delay+dur);
+                    o.start(t+delay); o.stop(t+delay+dur);
+                });
+            } else {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = 'sine';
+                o.connect(g); g.connect(audioCtx.destination);
+                o.frequency.value = 330;
+                o.frequency.linearRampToValueAtTime(280, t+0.2);
+                g.gain.setValueAtTime(0.12, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t+0.25);
+                o.start(t); o.stop(t+0.25);
+            }
+        }
+
+        function toggleSound() {
+            soundOn = !soundOn;
+            const btn = document.getElementById('soundBtn');
+            const icon = document.getElementById('bellIcon');
+            if (soundOn) {
+                icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#8d8d8d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+                btn.classList.remove('off');
+            } else {
+                icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="3" y1="3" x2="21" y2="21" stroke="#e53935" stroke-width="2"/></svg>';
+                btn.classList.add('off');
+            }
+        }
+
+        // ============ 林志玲风格语音 ============
+        // 检测浏览器是否支持语音合成（微信X5不支持）
+        var hasSpeech = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+
+        function linVoice(text, done) {
+            if (!soundOn) { if(done) done(); return; }
+
+            // 微信X5不支持语音合成，直接跳过
+            if (!hasSpeech) {
+                console.log('[math-game] 语音合成不可用，跳过语音:', text);
+                if (done) done();
+                return;
+            }
+
+            // 把符号替换成中文文字，避免语音读成"杠"
+            const spoken = text
+                .replace(/\u2212/g, '减')
+                .replace(/-/g, '减')
+                .replace(/\+/g, '加')
+                .replace(/=/g, '等于')
+                .replace(/个/g, '个')
+                .replace(/进一/g, '进一');
+
+            const utt = new SpeechSynthesisUtterance(spoken);
+            utt.lang = 'zh-CN';
+            utt.rate = 1.3;
+            utt.pitch = 1.1;
+            utt.volume = 0.9;
+
+            const voices = speechSynthesis.getVoices();
+            const nice = voices.find(v =>
+                v.lang.includes('zh') && (
+                    v.name.includes('Ting') || v.name.includes('Mei') ||
+                    v.name.includes('Ya') || v.name.includes('Li') ||
+                    v.name.includes('Lin') || v.lang === 'zh-CN' ||
+                    v.name.includes('Female')
+                )
+            ) || voices.find(v => v.lang.includes('zh'));
+
+            if (nice) utt.voice = nice;
+
+            utt.onstart = () => {
+                document.getElementById('speaking').classList.add('show');
+                isSpeaking = true;
+            };
+            utt.onend = utt.onerror = () => {
+                document.getElementById('speaking').classList.remove('show');
+                isSpeaking = false;
+                if (done) done();
+            };
+
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utt);
+        }
+
+        function stopVoice() {
+            if (!hasSpeech) {
+                document.getElementById('speaking').classList.remove('show');
+                isSpeaking = false;
+                return;
+            }
+            speechSynthesis.cancel();
+            document.getElementById('speaking').classList.remove('show');
+            isSpeaking = false;
+        }
+
+        // ============ 题库生成 ============
+        function make(lvl) {
+            let a, b, ans, type, name;
+
+            // 安全检查：level 必须在 1-5 范围内
+            if (!lvl || lvl < 1 || lvl > 5) {
+                console.error('[math-game] make() 收到无效的 level:', lvl, '，默认使用 level=1');
+                lvl = 1;
+            }
+
+            switch(lvl) {
+                case 1: {
+                    if (Math.random() > 0.5) {
+                        a = rnd(1,9); b = rnd(1, 10-a);
+                        ans = a + b; type = 'add1';
+                        name = '十以内加法';
+                    } else {
+                        a = rnd(2,9); b = rnd(1, a-1);
+                        ans = a - b; type = 'sub1';
+                        name = '十以内减法';
+                    }
+                    break;
+                }
+                case 2: {
+                    if (Math.random() > 0.5) {
+                        a = rnd(11,19); b = rnd(1,9);
+                        ans = a + b; type = 'add2';
+                        name = '十几加几';
+                    } else {
+                        a = rnd(12,19); b = rnd(1, a-10);
+                        ans = a - b; type = 'sub2';
+                        name = '十几减几';
+                    }
+                    break;
+                }
+                case 3: {
+                    if (Math.random() > 0.4) {
+                        a = rnd(11,20); b = rnd(1,9);
+                        ans = a + b; type = 'add3';
+                        name = '二十以内加法';
+                    } else {
+                        a = rnd(13,25); b = rnd(1,9);
+                        if (a <= b) { a += 10; }
+                        ans = a - b; type = 'sub3';
+                        name = '二十以内减法';
+                    }
+                    break;
+                }
+                case 4: {
+                    // 两位数加减整十数（如 23+40, 67-30）
+                    if (Math.random() > 0.5) {
+                        a = rnd(11, 89);
+                        const maxB = Math.floor((99 - a) / 10);
+                        b = rnd(1, maxB) * 10;
+                        ans = a + b; type = 'add4';
+                        name = '两位数加整十';
+                    } else {
+                        b = rnd(1, 8) * 10;
+                        a = rnd(b + 1, 99);
+                        ans = a - b; type = 'sub4';
+                        name = '两位数减整十';
+                    }
+                    break;
+                }
+                case 5: {
+                    // 百以内不进退位加减法（个位和<10，十位和<10）
+                    if (Math.random() > 0.5) {
+                        const a1 = rnd(2, 6), a0 = rnd(0, 7);
+                        const b1 = rnd(1, 9 - a1), b0 = rnd(0, 9 - a0);
+                        a = a1 * 10 + a0;
+                        b = b1 * 10 + b0;
+                        ans = a + b; type = 'add5';
+                        name = '不进退位加法';
+                    } else {
+                        const a1 = rnd(3, 8), a0 = rnd(2, 8);
+                        const b1 = rnd(1, a1 - 1), b0 = rnd(0, a0);
+                        a = a1 * 10 + a0;
+                        b = b1 * 10 + b0;
+                        ans = a - b; type = 'sub5';
+                        name = '不进退位减法';
+                    }
+                    break;
+                }
+            }
+
+            return { a, b, ans, type, name };
+        }
+
+        function rnd(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // ============ 竖式步骤生成 ============
+        function genVerticalSteps(p) {
+            const { a, b, ans, type } = p;
+            const a1 = Math.floor(a / 10), a0 = a % 10;
+            const b1 = Math.floor(b / 10), b0 = b % 10;
+            const isAdd = type.startsWith('add');
+
+            // 计算对齐缩进（根据被加/被减数的位数，让上下数字右对齐）
+            const aLen = String(a).length;
+            const bLen = String(b).length;
+            // 总宽度 = 最大位数 + 1（符号位），确保两行数字右端对齐
+            const maxLen = Math.max(aLen, bLen) + 1;
+            // 被加/被减数上方缩进（右对齐到总宽度）
+            function alignTop(num) {
+                const nLen = String(num).length;
+                const pad = maxLen - nLen;
+                return pad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(pad) : '';
+            }
+            // 加/减数上方缩进（符号占1位，数字右对齐到总宽度）
+            function alignBottom(num) {
+                const nLen = String(num).length;
+                // 符号占1个字符宽度，数字需要右对齐到总宽度
+                const pad = maxLen - nLen - 1;
+                return pad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(pad) : '';
+            }
+
+            const steps = [];
+
+            if (isAdd) {
+                const carry = a0 + b0 >= 10;
+                const sum0 = a0 + b0;
+                const sum1 = a1 + b1 + (carry ? 1 : 0);
+
+                // 第1行：被加数 a（在上，不带符号，右对齐）
+                steps.push({
+                    row: 0,
+                    content: `${alignTop(a)}<span class="v-num"><span class="digit appear">${a}</span></span>`,
+                    highlight: false,
+                    voice: `${a}`
+                });
+
+                // 第2行：加号 + 加数 b（右对齐）
+                steps.push({
+                    row: 1,
+                    content: `<span class="v-op">+</span>${alignBottom(b)}<span class="v-num"><span class="digit appear">${b}</span></span>`,
+                    highlight: false,
+                    voice: `加${b}`
+                });
+
+                // 第3行：横线
+                steps.push({ row: 'line', content: '', highlight: false, voice: '' });
+
+                if (carry) {
+                    // 进位：先显示进位标记+个位和，再显示完整答案
+                    const sum0Unit = sum0 % 10; // 个位数字
+                    const carryPad = maxLen - 2; // 进位标记(1) + 个位(1) = 2个字符
+                    const carrySpaces = carryPad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(carryPad) : '';
+                    steps.push({
+                        row: 2,
+                        content: `${carrySpaces}<span class="v-num"><span class="digit carry appear">1</span><span class="digit">${sum0Unit}</span></span>`,
+                        highlight: true,
+                        voice: `${a0}加${b0}等于${sum0}，满十进一`
+                    });
+                    // 答案上方的横线
+                    steps.push({ row: 'line2', content: '', highlight: false, voice: '' });
+                    const ansLen = String(ans).length;
+                    const ansPad = maxLen - ansLen;
+                    const ansSpaces = ansPad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(ansPad) : '';
+                    steps.push({
+                        row: 3,
+                        content: `${ansSpaces}<span class="v-result appear">${ans}</span>`,
+                        highlight: true,
+                        voice: `${a1}加${b1}再加进位1等于${sum1}，答案是${ans}`
+                    });
+                } else {
+                    const sum0Pad = maxLen - 1; // sum0 是1位数
+                    const sum0Spaces = sum0Pad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(sum0Pad) : '';
+                    steps.push({
+                        row: 2,
+                        content: `${sum0Spaces}<span class="v-num"><span class="digit">${sum0}</span></span>`,
+                        highlight: true,
+                        voice: `${a0}加${b0}等于${sum0}`
+                    });
+                    // 答案上方的横线
+                    steps.push({ row: 'line2', content: '', highlight: false, voice: '' });
+                    const ansLen2 = String(ans).length;
+                    const ansPad2 = maxLen - ansLen2;
+                    const ansSpaces2 = ansPad2 > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(ansPad2) : '';
+                    steps.push({
+                        row: 3,
+                        content: `${ansSpaces2}<span class="v-result appear">${ans}</span>`,
+                        highlight: true,
+                        voice: `${a1}加${b1}等于${sum1}，答案是${ans}`
+                    });
+                }
+            } else {
+                // 减法：竖式第1行=被减数a（在上），第2行=减数b（在下带符号）
+                const borrow = a0 < b0;
+                const borrowed0 = a0 + 10;
+                const borrowed1 = a1 - 1;
+
+                // 第1行：被减数 a（不带符号，右对齐）
+                steps.push({
+                    row: 0,
+                    content: `${alignTop(a)}<span class="v-num"><span class="digit appear">${a}</span></span>`,
+                    highlight: false,
+                    voice: `${a}`
+                });
+
+                // 第2行：减号 + 减数 b（右对齐）
+                steps.push({
+                    row: 1,
+                    content: `<span class="v-op">\u2212</span>${alignBottom(b)}<span class="v-num"><span class="digit appear">${b}</span></span>`,
+                    highlight: false,
+                    voice: `减${b}`
+                });
+
+                // 第3步：横线
+                steps.push({ row: 'line', content: '', highlight: false, voice: '' });
+
+                if (borrow) {
+                    const borrowPad = maxLen - 2; // 借位标记(1) + 个位(1) = 2个字符
+                    const borrowSpaces = borrowPad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(borrowPad) : '';
+                    steps.push({
+                        row: 2,
+                        content: `${borrowSpaces}<span class="v-num"><span class="digit borrow appear">\u00B7</span><span class="digit">${a0}</span></span>`,
+                        highlight: true,
+                        voice: `${a0}不够减${b0}，从十位借一当十，十位${a1}变成${borrowed1}，个位${borrowed0}减${b0}等于${borrowed0-b0}`
+                    });
+                    // 答案上方的横线
+                    steps.push({ row: 'line2', content: '', highlight: false, voice: '' });
+                    const ansLen3 = String(ans).length;
+                    const ansPad3 = maxLen - ansLen3;
+                    const ansSpaces3 = ansPad3 > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(ansPad3) : '';
+                    steps.push({
+                        row: 3,
+                        content: `${ansSpaces3}<span class="v-result appear">${ans}</span>`,
+                        highlight: true,
+                        voice: `答案是${ans}`
+                    });
+                } else {
+                    const diff0 = a0 - b0;
+                    const diff0Pad = maxLen - 1; // diff0 是1位数
+                    const diff0Spaces = diff0Pad > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(diff0Pad) : '';
+                    steps.push({
+                        row: 2,
+                        content: `${diff0Spaces}<span class="v-num"><span class="digit">${diff0}</span></span>`,
+                        highlight: true,
+                        voice: `个位${a0}减${b0}等于${diff0}`
+                    });
+                    // 答案上方的横线
+                    steps.push({ row: 'line2', content: '', highlight: false, voice: '' });
+                    const ansLen4 = String(ans).length;
+                    const ansPad4 = maxLen - ansLen4;
+                    const ansSpaces4 = ansPad4 > 0 ? '<span style="letter-spacing:0.1em">&nbsp;</span>'.repeat(ansPad4) : '';
+                    steps.push({
+                        row: 3,
+                        content: `${ansSpaces4}<span class="v-result appear">${ans}</span>`,
+                        highlight: true,
+                        voice: `十位${a1}减${b1}等于${a1-b1}，答案是${ans}`
+                    });
+                }
+            }
+
+            return steps;
+        }
+
+        // ============ 讲解生成 ============
+        function explain(p) {
+            const steps = [];
+            const { a, b, ans, type } = p;
+
+            switch(type) {
+                case 'add1': {
+                    steps.push({ t: `${a} 加 ${b}`, s: '数一数' });
+                    steps.push({ t: `一共有 <span class="r">${ans}</span> 个`, s: '' });
+                    break;
+                }
+                case 'sub1': {
+                    // 例：8-3，把3分成2和1，先8-2=6，再6-1=5
+                    if (a >= b) {
+                        // 直接能减：8-3=5
+                        steps.push({ t: `${a} 减 ${b}`, s: '直接相减' });
+                        steps.push({ t: `${a} - ${b} = <span class="r">${ans}</span>`, s: '' });
+                    } else {
+                        // 需要凑：14-7，把7分成4和3，先14-4=10，再10-3=7
+                        const part1 = a; // 先凑到整十
+                        const part2 = b - a; // 剩下的部分
+                        steps.push({ t: `${a} 减 ${b}`, s: '把' + b + '分成' + part1 + '和' + part2 });
+                        steps.push({ t: `先算 ${a} - ${part1} = ${a - part1}`, s: '' });
+                        steps.push({ t: `再算 ${a - part1} - ${part2} = <span class="r">${ans}</span>`, s: '' });
+                    }
+                    break;
+                }
+                case 'add2': {
+                    const unit = a % 10;
+                    steps.push({ t: `${a} + ${b}`, s: '个位加个位' });
+                    steps.push({ t: `${unit} + ${b} = ${unit+b}`, s: '十位不变' });
+                    steps.push({ t: `答案 <span class="r">${ans}</span>`, s: '' });
+                    break;
+                }
+                case 'sub2': {
+                    // 例：14-7，把7分成4和3，先14-4=10，再10-3=7
+                    const unit = a % 10;
+                    if (unit >= b) {
+                        // 个位够减：16-4=12，直接减
+                        steps.push({ t: `${a} - ${b}`, s: '个位够减，直接算' });
+                        steps.push({ t: `十位不变：1<br>个位：${unit} - ${b} = ${unit-b}`, s: `答案 <span class="r">${ans}</span>` });
+                    } else {
+                        // 个位不够减，用凑十法
+                        const part1 = unit;      // 先减到整十
+                        const part2 = b - unit;  // 再减剩下的
+                        steps.push({ t: `${a} - ${b}`, s: '个位不够减，用凑十法' });
+                        steps.push({ t: `把 ${b} 分成 ${part1} 和 ${part2}`, s: '' });
+                        steps.push({ t: `先算 ${a} - ${part1} = ${unit + 10}`, s: '' });
+                        steps.push({ t: `再算 ${unit + 10} - ${part2} = <span class="r">${ans}</span>`, s: '' });
+                    }
+                    break;
+                }
+                case 'add3': {
+                    const u = a % 10;
+                    if (u + b < 10) {
+                        steps.push({ t: `${a} + ${b}`, s: '个位相加' });
+                        steps.push({ t: `${u} + ${b} = ${u+b}，十位不变`, s: '答案 <span class="r">' + ans + '</span>' });
+                    } else {
+                        steps.push({ t: `${a} + ${b}`, s: '个位相加' });
+                        steps.push({ t: `${u} + ${b} = ${u+b}，满十进一`, s: '' });
+                        steps.push({ t: `十位 1 加 1 = 2`, s: '答案 <span class="r">' + ans + '</span>' });
+                    }
+                    break;
+                }
+                case 'sub3': {
+                    // 例：18-9，把9分成2和7，先18-2=16，再16-7=9
+                    // 例：15-8，把8分成5和3，先15-5=10，再10-3=7
+                    const u = a % 10;
+                    if (u >= b) {
+                        // 个位够减
+                        steps.push({ t: `${a} - ${b}`, s: '个位够减，直接算' });
+                        steps.push({ t: `十位不变：1<br>个位：${u} - ${b} = ${u-b}`, s: `答案 <span class="r">${ans}</span>` });
+                    } else {
+                        const part1 = u;        // 先减到整十
+                        const part2 = b - u;    // 再减剩下的
+                        steps.push({ t: `${a} - ${b}`, s: '个位不够减，用凑十法' });
+                        steps.push({ t: `把 ${b} 分成 ${part1} 和 ${part2}`, s: '' });
+                        steps.push({ t: `先算 ${a} - ${part1} = ${u + 10}`, s: '' });
+                        steps.push({ t: `再算 ${u + 10} - ${part2} = <span class="r">${ans}</span>`, s: '' });
+                    }
+                    break;
+                }
+                case 'add4': {
+                    const t1 = a / 10, t2 = b / 10;
+                    steps.push({ t: `${a} + ${b}`, s: '十位加十位' });
+                    steps.push({ t: `${t1} + ${t2} = ${t1+t2}，后面加0`, s: '答案 <span class="r">' + ans + '</span>' });
+                    break;
+                }
+                case 'sub4': {
+                    const t1 = a / 10, t2 = b / 10;
+                    steps.push({ t: `${a} - ${b}`, s: '十位减十位' });
+                    steps.push({ t: `${t1} - ${t2} = ${t1-t2}，后面加0`, s: '答案 <span class="r">' + ans + '</span>' });
+                    break;
+                }
+                case 'add5': {
+                    const a1 = Math.floor(a/10), a0 = a%10;
+                    const b1 = Math.floor(b/10), b0 = b%10;
+                    const carry = a0 + b0 >= 10;
+                    steps.push({ t: `${a} + ${b}`, s: '列竖式' });
+                    steps.push({ t: `个位：${a0} + ${b0} = ${a0+b0}${carry?'，进一':''}`, s: '' });
+                    steps.push({ t: `十位：${a1} + ${b1}${carry?'+1':''} = ${a1+b1+(carry?1:0)}`, s: '答案 <span class="r">' + ans + '</span>' });
+                    break;
+                }
+                case 'sub5': {
+                    const a1 = Math.floor(a/10), a0 = a%10;
+                    const b1 = Math.floor(b/10), b0 = b%10;
+                    const borrow = a0 < b0;
+                    steps.push({ t: `${a} \u2212 ${b}`, s: '列竖式' });
+                    if (borrow) {
+                        const borrowed1 = a1 - 1;
+                        steps.push({ t: `个位：${a0}不够减${b0}，借一当十`, s: `${a0+10} \u2212 ${b0} = ${a0+10-b0}` });
+                        steps.push({ t: `十位：${borrowed1} \u2212 ${b1} = ${borrowed1-b1}`, s: `答案 <span class="r">${ans}</span>` });
+                    } else {
+                        steps.push({ t: `个位：${a0} \u2212 ${b0} = ${a0-b0}`, s: '' });
+                        steps.push({ t: `十位：${a1} \u2212 ${b1} = ${a1-b1}`, s: `答案 <span class="r">${ans}</span>` });
+                    }
+                    break;
+                }
+            }
+
+            return steps;
+        }
+
+        // ============ UI 渲染 ============
+        function renderTrack() {
+            let track = '';
+            for (let i = 1; i <= 5; i++) {
+                let cls = 'level-dot';
+                if (i < level) cls += ' done';
+                if (i === level) cls += ' current';
+                const lockIcon = (isManualLevel && i === level) ? ' 🔒' : '';
+                track += `<div class="${cls}">${i}${lockIcon}</div>`;
+            }
+            document.getElementById('levelTrack').innerHTML = track;
+
+            let labels = '';
+            for (let i = 0; i < 5; i++) {
+                const cls = i+1 === level ? 'level-label current' : 'level-label';
+                labels += `<div class="${cls}">${LEVEL_NAMES[i]}</div>`;
+            }
+            document.getElementById('levelLabels').innerHTML = labels;
+        }
+
+        function renderProgress() {
+            document.getElementById('winCount').textContent = winStreak;
+            document.getElementById('loseCount').textContent = loseStreak;
+            document.getElementById('winBar').style.width = (winStreak / 5 * 100) + '%';
+            const lockTag = isManualLevel ? ' 🔒' : '';
+            document.getElementById('levelTag').textContent = `第${level}关 · ${LEVEL_NAMES[level-1]}${lockTag}`;
+            updateLockStats();
+        }
+
+        function updateLockStats() {
+            if (!isManualLevel) return;
+            var ls = document.getElementById('lockStats');
+            if (ls) ls.classList.remove('hidden');
+            document.getElementById('lsTotal').textContent = lockTotal;
+            document.getElementById('lsCorrect').textContent = lockCorrect;
+            var rate = lockTotal > 0 ? Math.round(lockCorrect / lockTotal * 100) : 0;
+            document.getElementById('lsRate').textContent = rate + '%';
+
+            // 里程碑提示
+            var msgs = {10:'加油！💪', 20:'再接再厉！🌟', 30:'你太棒了！👍'};
+            var msg = null;
+            if (lockCorrect === 10) msg = msgs[10];
+            else if (lockCorrect === 20) msg = msgs[20];
+            else if (lockCorrect === 30) msg = msgs[30];
+            if (msg) {
+                var el = document.getElementById('milestoneMsg');
+                el.textContent = msg;
+                el.classList.remove('hidden');
+            }
+        }
+
+        function renderSteps() {
+            const container = document.getElementById('explainSteps');
+            container.innerHTML = steps.map((s, i) =>
+                `<div class="explain-step" id="es${i}">
+                    <div class="step-num">${i+1}</div>
+                    <div class="step-content">${s.t}${s.s ? '<br><small style="color:#aaa;">' + s.s + '</small>' : ''}</div>
+                </div>`
+            ).join('');
+        }
+
+        function showStep(index) {
+            document.querySelectorAll('.explain-step').forEach((el, i) => {
+                el.classList.remove('show', 'active');
+                if (i <= index) el.classList.add('show');
+                if (i === index) el.classList.add('active');
+            });
+        }
+
+        // ============ 竖式动画 ============
+        function resetVertical() {
+            // 停止任何进行中的动画
+            if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
+
+            const vc = document.getElementById('verticalCalc');
+            vc.classList.add('hidden');
+
+            // 清空所有行内容并移除 show 类
+            ['vRow0', 'vRow1', 'vLineRow', 'vResultRow', 'vAnsRow'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = '';
+                    el.classList.remove('show', 'highlight', 'hightlight-anim');
+                }
+            });
+
+            const line = document.getElementById('vLine');
+            if (line) line.classList.remove('show');
+            const line2 = document.getElementById('vLine2');
+            if (line2) line2.style.opacity = '0';
+        }
+
+        let _animTimer = null;
+
+        function playVerticalAnimation(auto = false) {
+            const vc = document.getElementById('verticalCalc');
+
+            if (!(level === 5 && (problem.type === 'add5' || problem.type === 'sub5'))) return;
+
+            // 停止之前的动画
+            if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
+
+            // 显示竖式容器
+            vc.classList.remove('hidden');
+
+            // 重新生成步骤
+            verticalSteps = genVerticalSteps(problem);
+
+            if (auto) {
+                let stepIdx = 0;
+
+                function showNextStep() {
+                    if (stepIdx >= verticalSteps.length) return;
+
+                    const step = verticalSteps[stepIdx];
+
+                    if (step.row === 'line') {
+                        const line = document.getElementById('vLine');
+                        if (line) line.classList.add('show');
+                        stepIdx++;
+                        _animTimer = setTimeout(showNextStep, 500);
+                        return;
+                    }
+
+                    if (step.row === 'line2') {
+                        const line2 = document.getElementById('vLine2');
+                        if (line2) { line2.style.opacity = '1'; }
+                        stepIdx++;
+                        _animTimer = setTimeout(showNextStep, 400);
+                        return;
+                    }
+
+                    // 行映射：0=vRow0(被加/被减数), 1=vRow1(加/减数), 2=vResultRow(过程), 3=vAnsRow(答案)
+                    const rowMap = { 0: 'vRow0', 1: 'vRow1', 2: 'vResultRow', 3: 'vAnsRow' };
+                    const rowEl = document.getElementById(rowMap[step.row]);
+
+                    if (rowEl) {
+                        // 每次写入内容前，先清空再设置（确保 DOM 刷新）
+                        rowEl.innerHTML = '';
+                        requestAnimationFrame(() => {
+                            rowEl.innerHTML = step.content;
+                            rowEl.classList.add('show');
+                            if (step.highlight) {
+                                rowEl.classList.add('highlight', 'hightlight-anim');
+                            }
+
+                            // 念语音（不阻塞动画进行）
+                            if (step.voice && soundOn) {
+                                var voiceDone = false;
+                                linVoice(step.voice, function() { voiceDone = true; });
+                                // X5无语音时3秒后强制继续
+                                setTimeout(function() { voiceDone = true; }, 3000);
+                            }
+                        });
+                    }
+
+                    stepIdx++;
+                    // 每个步骤固定等700ms，不管语音是否播完
+                    _animTimer = setTimeout(showNextStep, 700);
+                }
+
+                // 延迟100ms后开始（等 DOM 渲染好）
+                _animTimer = setTimeout(showNextStep, 100);
+            }
+        }
+
+        // ============ 游戏流程 ============
+        function newProblem() {
+            stopVoice();
+            problem = make(level);
+            console.log('[math-game] newProblem() 生成题目:', problem);
+            if (!problem || !problem.ans) {
+                console.error('[math-game] 题目生成失败，problem=', problem, 'level=', level);
+                // 兜底：强制使用 level 1
+                level = 1;
+                problem = make(1);
+            }
+            steps = explain(problem);
+            verticalSteps = [];
+
+            const op = problem.type.startsWith('sub') ? ' \u2212 ' : ' + ';
+            document.getElementById('problemText').textContent = `${problem.a}${op}${problem.b} = ?`;
+            document.getElementById('explainTitle').textContent = problem.name;
+            document.getElementById('explainBox').classList.remove('show');
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+
+            resetVertical();
+
+            const showSolBtn = document.getElementById('showSolBtn');
+            if (level === 5 && (problem.type === 'add5' || problem.type === 'sub5')) {
+                showSolBtn.textContent = '看竖式 \u25B6';
+            } else {
+                showSolBtn.textContent = '看方法';
+            }
+
+            renderProgress();
+        }
+
+        function submitAnswer() {
+            console.log('[math-game] submitAnswer() problem=', problem);
+            if (!problem || !problem.ans) {
+                console.error('[math-game] 题目未生成，重新生成');
+                newProblem();
+                return;
+            }
+            const val = parseInt(document.getElementById('answerInput').value);
+            if (isNaN(val)) {
+                document.getElementById('answerInput').classList.add('shake');
+                ding('no');
+                setTimeout(() => document.getElementById('answerInput').classList.remove('shake'), 300);
+                return;
+            }
+
+            total++;
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
+
+            if (val === problem.ans) {
+                correct++;
+                winStreak++;
+                loseStreak = 0;
+                score += 10 + winStreak * 2;
+                if (isManualLevel) { lockTotal++; lockCorrect++; }
+
+                ding('ok');
+                flyStar();
+                updateCatMood('happy');
+
+                document.getElementById('popupIcon').innerHTML = getPopupIconHTML(true);
+                document.getElementById('popupTitle').textContent = '正确!';
+                document.getElementById('popupDetail').textContent = `+${10 + winStreak * 2} 分`;
+
+                popup.className = 'popup correct show';
+                overlay.classList.add('show');
+
+                renderProgress();
+
+                if (winStreak >= 5) {
+                    setTimeout(() => {
+                        closePopup();
+                        if (!isManualLevel && level < 5) {
+                            level++;
+                            winStreak = 0;
+                            linVoice(`${level}关开始！${LEVEL_NAMES[level-1]}，加油！`);
+                            renderTrack();
+                            setTimeout(newProblem, 1500);
+                        } else if (!isManualLevel && level >= 5) {
+                            showWin();
+                        } else {
+                            // 锁定模式：不晋级，重置 streak 继续当前关
+                            winStreak = 0;
+                            renderProgress();
+                            newProblem();
+                        }
+                    }, 1200);
+                    return;
+                }
+
+                setTimeout(() => { closePopup(); newProblem(); }, 1000);
+
+            } else {
+                loseStreak++;
+                if (isManualLevel) lockTotal++;
+                winStreak = 0;
+
+                ding('no');
+                updateCatMood('sad');
+
+                document.getElementById('popupIcon').innerHTML = getPopupIconHTML(false);
+                document.getElementById('popupTitle').textContent = ['再想想~','别急~','加油~'][rnd(0,2)];
+                document.getElementById('popupDetail').textContent = `正确答案 ${problem.ans}`;
+
+                popup.className = 'popup wrong show';
+                overlay.classList.add('show');
+
+                renderProgress();
+
+                if (loseStreak >= 2 && level > 1) {
+                    setTimeout(() => {
+                        closePopup();
+                        if (!isManualLevel) {
+                            level--;
+                        }
+                        loseStreak = 0;
+                        winStreak = 0;
+                        linVoice(`没关系，回到第${level}关重新开始。`);
+                        renderTrack();
+                        setTimeout(newProblem, 1500);
+                    }, 1200);
+                    return;
+                }
+
+                setTimeout(() => { closePopup(); newProblem(); }, 1200);
+            }
+
+            saveProgress();
+        }
+
+        function closePopup() {
+            document.getElementById('popup').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        function showSolution() {
+            document.getElementById('explainBox').classList.add('show');
+            renderSteps();
+            showStep(0);
+
+            if (level === 5 && (problem.type === 'add5' || problem.type === 'sub5')) {
+                const showSolBtn = document.getElementById('showSolBtn');
+                showSolBtn.classList.add('show-vertical-btn');
+                playVerticalAnimation(true);
+            }
+        }
+
+        function speakAll() {
+            if (isSpeaking) { stopVoice(); return; }
+
+            document.getElementById('explainBox').classList.add('show');
+            renderSteps();
+            showStep(0);
+
+            let i = 0;
+
+            function next() {
+                if (i >= steps.length) {
+                    isSpeaking = false;
+                    document.getElementById('speaking').classList.remove('show');
+                    return;
+                }
+
+                showStep(i);
+                // 始终显示大字提示（X5无语音时的兜底）
+                showStepHint(i);
+
+                // 提取纯文本并念出来
+                var text = steps[i].t.replace(/<[^>]+>/g, '').replace(/\u2212/g, '减').replace(/-/g, '减').replace(/\+/g, '加').replace(/=/g, '等于').trim();
+                isSpeaking = true;
+                document.getElementById('speaking').classList.add('show');
+
+                linVoice(text, function() {
+                    isSpeaking = false;
+                    document.getElementById('speaking').classList.remove('show');
+                    i++;
+                    // 有语音时等语音播完+额外缓冲；无语音时固定1.8秒
+                    setTimeout(next, hasSpeech ? 600 : 1800);
+                });
+
+                // X5 无语音合成时 linVoice 立即调用 done，1.8秒后自动进入下一步
+                // 如果3秒后仍在 speakAll 中（语音失败保护），强制继续
+                setTimeout(function() {
+                    if (isSpeaking) {
+                        isSpeaking = false;
+                        document.getElementById('speaking').classList.remove('show');
+                        i++;
+                        next();
+                    }
+                }, 3000);
+            }
+
+            next();
+        }
+
+        // 显示讲解步骤的大字提示（弥补X5无语音的不足）
+        function showStepHint(index) {
+            if (!steps[index]) return;
+            var hint = document.getElementById('stepHint');
+            if (!hint) {
+                hint = document.createElement('div');
+                hint.id = 'stepHint';
+                hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FF9A44,#FF7043);color:white;font-size:18px;font-weight:bold;padding:12px 24px;border-radius:30px;box-shadow:0 4px 15px rgba(255,112,67,0.4);z-index:9999;max-width:90%;text-align:center;animation:fadeInUp 0.3s ease;';
+                document.body.appendChild(hint);
+            }
+            // 提取纯文本（去掉HTML标签）
+            var text = steps[index].t.replace(/<[^>]+>/g, '').trim();
+            hint.textContent = text;
+            hint.style.animation = 'none';
+            hint.offsetHeight; // 触发重排以重置动画
+            hint.style.animation = 'fadeInUp 0.3s ease';
+            // 3秒后自动消失
+            setTimeout(function() {
+                if (hint) hint.style.opacity = '0';
+            }, 2500);
+        }
+
+        function skipProblem() {
+            loseStreak++;
+            if (isManualLevel) lockTotal++;
+            winStreak = 0;
+            ding('no');
+            renderProgress();
+
+            if (loseStreak >= 2 && level > 1) {
+                if (!isManualLevel) {
+                    level--;
+                }
+                loseStreak = 0;
+                winStreak = 0;
+                linVoice(`没关系，回到第${level}关。`);
+                renderTrack();
+            }
+
+            saveProgress();
+            setTimeout(newProblem, 300);
+        }
+
+        function flyStar() {
+            if (!soundOn) return;
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const s = document.createElement('div');
+                    s.className = 'star-fly';
+                    s.innerHTML = SVG_STAR_FLY;
+                    s.style.cssText = `left:${rnd(25,65)}%;top:40%;--dx:${rnd(-30,30)}px`;
+                    document.body.appendChild(s);
+                    setTimeout(() => s.remove(), 800);
+                }, i * 80);
+            }
+        }
+
+        function showWin() {
+            stopVoice();
+            document.getElementById('gameBody').classList.remove('active');
+            document.getElementById('winPage').style.display = 'block';
+
+            const rate = total > 0 ? Math.round(correct / total * 100) : 0;
+            const stars = rate >= 90 ? 3 : rate >= 70 ? 2 : 1;
+
+            // 渲染星星（SVG）
+            let starsHTML = '';
+            for (let i = 0; i < 3; i++) {
+                starsHTML += i < stars ? SVG_STAR_SMALL : SVG_STAR_EMPTY;
+            }
+            document.getElementById('winStars').innerHTML = starsHTML;
+
+            document.getElementById('winScore').textContent = score;
+            document.getElementById('winRate').textContent = rate + '%';
+
+            // 渲染通关页猫咪头像
+            document.getElementById('winEmoji').innerHTML =
+                '<div style="margin-bottom:15px;animation:bounce 0.6s infinite alternate;display:flex;justify-content:center;">' +
+                CAT.svg('large', 'happy') + '</div>';
+
+            ding('ok');
+            linVoice('太棒了！全部通关！你真是个数学小天才！');
+
+            localStorage.removeItem('mathpet');
+        }
+
+        function startGame() {
+            pet = CAT; // 固定猫咪
+            isManualLevel = false;
+            lockTotal = 0; lockCorrect = 0;
+            document.getElementById('lockStats').classList.add('hidden');
+            document.getElementById('milestoneMsg').classList.add('hidden');
+
+            document.getElementById('startPage').style.display = 'none';
+            document.getElementById('gameBody').classList.add('active');
+
+            // 显示难度快捷选择
+            var levelQuick = document.getElementById('levelQuickSelect');
+            if (levelQuick) levelQuick.classList.remove('hidden');
+            updateLevelQuickHighlight();
+
+            loadProgress();
+            renderTrack();
+
+            // 语音开始后回调 newProblem，但移动端语音可能失败，用 setTimeout兜底
+            let called = false;
+            function safeNext() {
+                if (called) return;
+                called = true;
+                clearTimeout(fallbackTimer);
+                newProblem();
+            }
+            // 微信X5不支持语音合成，直接走兜底（不依赖语音回调）
+            const fallbackTimer = setTimeout(safeNext, 300); // 300ms后直接进入
+            linVoice('和小猫咪一起，开始第' + level + '关！', safeNext);
+        }
+
+        function updateLevelQuickHighlight() {
+            document.querySelectorAll('.level-quick-btn').forEach(function(b) {
+                b.classList.toggle('active', parseInt(b.getAttribute('data-level')) === level);
+            });
+        }
+
+        function restartGame() {
+            level = 1; score = 0; total = 0; correct = 0;
+            winStreak = 0; loseStreak = 0;
+            isManualLevel = false;
+            lockTotal = 0; lockCorrect = 0;
+            document.getElementById('lockStats').classList.add('hidden');
+            document.getElementById('milestoneMsg').classList.add('hidden');
+
+            document.getElementById('winPage').style.display = 'none';
+            document.getElementById('gameBody').classList.add('active');
+
+            // 显示难度快捷选择
+            var levelQuick = document.getElementById('levelQuickSelect');
+            if (levelQuick) levelQuick.classList.remove('hidden');
+            updateLevelQuickHighlight();
+
+            renderTrack();
+
+            let called = false;
+            function safeNext() {
+                if (called) return;
+                called = true;
+                clearTimeout(fallbackTimer);
+                newProblem();
+            }
+            // 微信X5不支持语音合成，直接走兜底
+            const fallbackTimer = setTimeout(safeNext, 300);
+            linVoice('重新开始！第1关！', safeNext);
+        }
+
+        function pickAnimal(btn) {
+            // 已简化为固定猫咪，此函数保留但不再使用
+        }
+
+        // ============ 存档 ============
+        function saveProgress() {
+            localStorage.setItem('mathpet', JSON.stringify({ level, score, correct, total }));
+        }
+
+        function loadProgress() {
+            try {
+                const data = JSON.parse(localStorage.getItem('mathpet'));
+                if (data) {
+                    level = data.level || 1;
+                    score = data.score || 0;
+                    correct = data.correct || 0;
+                    total = data.total || 0;
+                }
+            } catch(e) {}
+        }
+
+        // ============ 事件绑定（腾讯 X5 WebView 兼容性 - 双轨 touch+click） ============
+        function bindEvents() {
+            // 双轨按钮处理器：touchstart + click 双监听，防止 X5 漏报
+            // touchstart 直接触发，click 兜底；用 busy 标志防重复执行
+            function addBtn(id, fn) {
+                var el = document.getElementById(id);
+                if (!el) {
+                    console.error('[math-game] 按钮未找到:', id);
+                    return;
+                }
+                var busy = false;
+                var touched = false; // 追踪是否刚触发过 touch
+
+                function exec() {
+                    if (busy) {
+                        console.log('[math-game] 按钮 ' + id + ' 被跳过（busy）');
+                        return;
+                    }
+                    busy = true;
+                    touched = true;
+                    setTimeout(function() { busy = false; touched = false; }, 400);
+                    console.log('[math-game] 按钮 ' + id + ' 被触发');
+                    fn();
+                }
+
+                // touchstart：X5 优先触发这个
+                el.addEventListener('touchstart', function(e) {
+                    console.log('[math-game] touchstart 触发:', id);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    exec();
+                }, { passive: false });
+
+                // click：桌面浏览器 / 部分 X5 环境兜底
+                // 只有当没有刚触发过 touch 时才执行（避免 touch 和 click 重复执行）
+                el.addEventListener('click', function(e) {
+                    console.log('[math-game] click 触发:', id, 'touched=', touched);
+                    e.stopPropagation();
+                    // touched=true 说明 touchstart 已触发并执行了，这里跳过
+                    // touched=false 说明没有 touchstart，直接执行
+                    if (!touched && !busy) {
+                        exec();
+                    }
+                });
+            }
+
+            // 触摸设备上：首次触摸激活 AudioContext
+            var audioInited = false;
+            document.addEventListener('touchstart', function() {
+                if (!audioInited) {
+                    audioInited = true;
+                    initAudio();
+                }
+            }, { passive: true });
+
+            // 开始按钮
+            addBtn('startBtn', function() {
+                var btn = document.getElementById('startBtn');
+                btn.classList.add('touch-active');
+                setTimeout(function() { btn.classList.remove('touch-active'); }, 150);
+                startGame();
+            });
+
+            // 回答按钮
+            addBtn('submitBtn', submitAnswer);
+
+            // 跳过按钮
+            addBtn('skipBtn', skipProblem);
+
+            // 看方法按钮
+            addBtn('showSolBtn', showSolution);
+
+            // 通关页再来一次 - 使用统一的 addBtn（更可靠）
+            addBtn('restartBtn', function() {
+                restartGame();
+            });
+
+            // 答题过程中重新开始按钮
+            addBtn('restartMidBtn', function() {
+                if (confirm('确定要重新开始吗？')) {
+                    restartGame();
+                }
+            });
+
+            // 输入框点击区域 - 点击时聚焦到输入框
+            var inputClickArea = document.getElementById('inputClickArea');
+            if (inputClickArea) {
+                inputClickArea.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    var inp = document.getElementById('answerInput');
+                    if (inp) {
+                        inp.focus();
+                        // 尝试显示键盘
+                        if (inp.showPicker) inp.showPicker();
+                        else if (inp.createTextRange) {
+                            var range = inp.createTextRange();
+                            range.moveEnd('character', inp.value.length);
+                            range.select();
+                        }
+                    }
+                }, { passive: false });
+                inputClickArea.addEventListener('click', function(e) {
+                    var inp = document.getElementById('answerInput');
+                    if (inp) inp.focus();
+                });
+            }
+
+            // 难度快捷选择按钮（选关+锁定，再点同关解锁）
+            document.querySelectorAll('.level-quick-btn').forEach(function(btn) {
+                function doSelect() {
+                    var targetLevel = parseInt(this.getAttribute('data-level'));
+                    if (isNaN(targetLevel) || targetLevel < 1 || targetLevel > 5) return;
+
+                    if (isManualLevel && targetLevel === level) {
+                        // 再点一次当前关 → 解锁
+                        isManualLevel = false;
+                        document.getElementById('lockStats').classList.add('hidden');
+                        document.getElementById('milestoneMsg').classList.add('hidden');
+                        renderTrack();
+                        renderProgress();
+                        updateLevelQuickHighlight();
+                        return;
+                    }
+
+                    // 选关并锁定
+                    level = targetLevel;
+                    isManualLevel = true;
+                    lockTotal = 0;
+                    lockCorrect = 0;
+                    document.getElementById('lockStats').classList.remove('hidden');
+                    document.getElementById('milestoneMsg').classList.add('hidden');
+                    winStreak = 0;
+                    loseStreak = 0;
+                    renderTrack();
+                    newProblem();
+                    updateLevelQuickHighlight();
+                }
+
+                btn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    doSelect.call(this);
+                }, { passive: false });
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    doSelect.call(this);
+                });
+            });
+
+            // 讲解按钮
+            addBtn('speakBtn2', speakAll);
+
+            // 音效开关
+            var soundBtn = document.getElementById('soundBtn');
+            if (soundBtn) {
+                (function(btn) {
+                    var busy = false;
+                    function exec() { console.log('[math-game] soundBtn 被触发'); if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); toggleSound(); }
+                    btn.addEventListener('touchstart', function(e) { console.log('[math-game] soundBtn touchstart'); e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    btn.addEventListener('click', function(e) { console.log('[math-game] soundBtn click'); e.stopPropagation(); if (!busy) exec(); });
+                })(soundBtn);
+            }
+
+            // 点击遮罩关闭弹窗
+            var overlay = document.getElementById('overlay');
+            if (overlay) {
+                (function(el) {
+                    var busy = false;
+                    function exec() { if (busy) return; busy = true; setTimeout(function() { busy = false; }, 400); closePopup(); }
+                    el.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); exec(); }, { passive: false });
+                    el.addEventListener('click', function(e) { e.stopPropagation(); if (!busy) exec(); });
+                })(overlay);
+            }
+
+            // 输入框：过滤非数字 + 回车提交
+            var answerInput = document.getElementById('answerInput');
+            if (answerInput) {
+                answerInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/[^0-9-]/g, '');
+                });
+                answerInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        submitAnswer();
+                    }
+                });
+                // 触摸设备点击输入框时主动聚焦（腾讯X5兼容性）
+                answerInput.addEventListener('click', function() {
+                    setTimeout(function() { answerInput.focus(); }, 10);
+                });
+                // 兼容 inputmode numeric（部分腾讯浏览器不支持）
+                // 不强制用 number 类型，防止华为等机器弹出符号键盘
+            }
+        }
+
+        // 全局回车键：关闭弹窗或提交答案
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                if (document.getElementById('popup').classList.contains('show')) {
+                    closePopup();
+                } else if (document.getElementById('answerInput') && document.getElementById('answerInput').value) {
+                    submitAnswer();
+                }
+            }
+        });
+
+        // 预加载语音（仅在有语音合成支持时执行）
+        if (hasSpeech) { try { speechSynthesis.getVoices(); } catch(e) {} }
+
+        // ============ 初始化（DOM加载后执行——解决触摸设备不触发问题） ============
+        function doInit() {
+            try {
+                initAnimals();
+                updateCatMood('neutral'); // 初始化猫咪表情
+                bindEvents();
+                console.log('[math-game] 初始化完成，事件绑定成功');
+            } catch(e) {
+                console.error('[math-game] 初始化错误:', e);
+            }
+        }
+
+        // 优先用 DOMContentLoaded（最可靠）
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', doInit);
+        } else {
+            // DOM 已就绪（脚本在 </body> 前所以基本走这条）
+            doInit();
+        }
+    </script>
+</body>
+</html>
