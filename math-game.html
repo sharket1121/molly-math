@@ -2082,7 +2082,7 @@
                             linVoice(`${level}关开始！${LEVEL_NAMES[level-1]}，加油！`);
                             renderTrack();
                             setTimeout(newProblem, 1500);
-                        } else if (level >= 5) {
+                        } else if (!isManualLevel && level >= 5) {
                             showWin();
                         } else {
                             // 锁定模式：不晋级，重置 streak 继续当前关
