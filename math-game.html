@@ -244,6 +244,7 @@ body {
   border:none; border-radius:24px; color:white;
   font-size:1.05rem; font-weight:700; cursor:pointer;
   box-shadow:0 4px 18px rgba(156,39,176,.4); transition:all .2s;
+  touch-action:manipulation;
 }
 .start-btn:active { transform:scale(.95); }
 
@@ -347,7 +348,7 @@ body {
     <div class="input-row">
       <input type="text" inputmode="numeric" enterkeyhint="done"
              class="ans-input" id="ansInput"
-             placeholder="?" autocomplete="off" autocorrect="off"
+             placeholder="" autocomplete="off" autocorrect="off"
              autocapitalize="off" spellcheck="false">
       <button class="submit-btn" id="submitBtn">回答 ✓</button>
     </div>
@@ -412,7 +413,7 @@ let G = {
   problem:null, hintShown:false,
   soundOn:true, busy:false, running:false,
   isSpeaking:false, hintStepData:[], vertData:null,
-  animTid:null, manualLevel:false
+  animTid:null, manualLevel:false, starting:false
 };
 
 // ════════════════════════════════════════════
@@ -709,8 +710,8 @@ function genVert(p){
     const carry = a0+b0>=10;
     const sum0  = a0+b0;
     const sum1  = a1+b1+(carry?1:0);
+    rows.push({ content:`<span class="vnum">${a}</span>`, hi:false });
     rows.push({ content:`<span class="vop">+</span><span class="vnum">${b}</span>`, hi:false });
-    rows.push({ content:`<span style="width:2rem"></span><span class="vnum">${a}</span>`, hi:false });
     rows.push('line');
     if(carry){
       rows.push({ content:`<span class="carry-sup" style="font-size:.8rem">进1</span><span class="vnum">${sum0%10}</span>`, hi:true });
@@ -725,8 +726,8 @@ function genVert(p){
     voices.push(`答案是 ${ans}`);
   } else {
     const borrow = a0<b0;
+    rows.push({ content:`<span class="vnum">${a}</span>`, hi:false });
     rows.push({ content:`<span class="vop">−</span><span class="vnum">${b}</span>`, hi:false });
-    rows.push({ content:`<span style="width:2rem"></span><span class="vnum">${a}</span>`, hi:false });
     rows.push('line');
     if(borrow){
       rows.push({ content:`<span class="borrow-sup" style="font-size:.8rem">借1</span><span class="vnum">${a0+10-b0}</span>`, hi:true });
@@ -889,6 +890,7 @@ function newProblem(){
   G.problem=makeProblem(G.level);
   G.hintShown=false;
   G.busy=false;
+  G.starting=false;
 
   const p=G.problem;
   const opStr=p.op==='-'?'−':p.op;
@@ -947,6 +949,7 @@ function submitAnswer(){
           sfxUp();
           renderTrack(); saveData();
           speak(`太棒了！进入第${G.level}关！${LV_NAMES[G.level-1]}！`,()=>newProblem());
+          setTimeout(()=>newProblem(), 2000);
         } else {
           showWin();
         }
@@ -975,6 +978,7 @@ function submitAnswer(){
         G.level--; G.loseStreak=0; G.winStreak=0;
         sfxNg(); renderTrack(); saveData();
         speak(`没关系，回到第${G.level}关再练练。`,()=>newProblem());
+        setTimeout(()=>newProblem(), 2000);
       },1300);
       return;
     }
@@ -1118,6 +1122,8 @@ function showWin(){
 //  开始 / 重新开始
 // ════════════════════════════════════════════
 function startGame(){
+  if(G.starting) return;
+  G.starting=true;
   sfxClick();
   loadData();
   D.startPage.style.display='none';
@@ -1127,7 +1133,11 @@ function startGame(){
   G.winStreak=0; G.loseStreak=0;
   G.correct=0; G.total=0; G.score=0;
   renderTrack();
-  speak(`第${G.level}关，${LV_NAMES[G.level-1]}，开始！`,()=>newProblem());
+  // 语音播报，加1.5s超时兜底防止移动端语音加载失败导致游戏卡死
+  let started=false;
+  const go=()=>{ if(!started){ started=true; newProblem(); } };
+  speak(`第${G.level}关，${LV_NAMES[G.level-1]}，开始！`,go);
+  setTimeout(go, 1500);
 }
 
 function restartGame(){
@@ -1139,7 +1149,10 @@ function restartGame(){
   D.gameBody.classList.add('on');
   G.running=true;
   renderTrack();
-  speak('重新开始！第1关，加油！',()=>newProblem());
+  let started=false;
+  const go=()=>{ if(!started){ started=true; newProblem(); } };
+  speak('重新开始！第1关，加油！',go);
+  setTimeout(go, 1500);
 }
 
 // ════════════════════════════════════════════
@@ -1215,6 +1228,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     saveData();
     stopSpeak();
     speak(`第${lv}关，${LV_NAMES[lv-1]}`,()=>newProblem());
+    setTimeout(()=>newProblem(), 2000);
   });
 });
 </script>
