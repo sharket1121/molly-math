@@ -704,6 +704,25 @@
             transition: width 0.3s;
         }
 
+        .lock-stats { margin-bottom: 12px; }
+        .lock-stats.hidden { display: none; }
+        .lock-stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .lock-stats-row b { color: #c49a6c; font-size: 13px; }
+        .milestone {
+            text-align: center;
+            margin-top: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #ff9800;
+        }
+        .milestone.hidden { display: none; }
+
         /* 反馈弹窗 */
         .overlay {
             position: fixed;
@@ -1064,6 +1083,16 @@
                 <div class="mini-stat">答错 <span id="loseCount">0</span>/2</div>
             </div>
 
+            <!-- 锁定模式统计（选关锁定后显示） -->
+            <div class="lock-stats hidden" id="lockStats">
+                <div class="lock-stats-row">
+                    <span>做题 <b id="lsTotal">0</b></span>
+                    <span>答对 <b id="lsCorrect">0</b></span>
+                    <span>正确率 <b id="lsRate">--</b></span>
+                </div>
+                <div class="milestone hidden" id="milestoneMsg"></div>
+            </div>
+
             <!-- 题目 -->
             <div class="problem-box">
                 <div class="level-tag" id="levelTag">第1关 · 十以内加减法</div>
@@ -1272,6 +1301,8 @@
         let steps = [];
         let verticalSteps = [];
         let isManualLevel = false; // 手动选关锁定
+        let lockTotal = 0;          // 锁定模式下做题总数
+        let lockCorrect = 0;        // 锁定模式下答对数
 
         const LEVEL_NAMES = [
             '十以内加减法',
@@ -1830,6 +1861,29 @@
             document.getElementById('winBar').style.width = (winStreak / 5 * 100) + '%';
             const lockTag = isManualLevel ? ' 🔒' : '';
             document.getElementById('levelTag').textContent = `第${level}关 · ${LEVEL_NAMES[level-1]}${lockTag}`;
+            updateLockStats();
+        }
+
+        function updateLockStats() {
+            if (!isManualLevel) return;
+            var ls = document.getElementById('lockStats');
+            if (ls) ls.classList.remove('hidden');
+            document.getElementById('lsTotal').textContent = lockTotal;
+            document.getElementById('lsCorrect').textContent = lockCorrect;
+            var rate = lockTotal > 0 ? Math.round(lockCorrect / lockTotal * 100) : 0;
+            document.getElementById('lsRate').textContent = rate + '%';
+
+            // 里程碑提示
+            var msgs = {10:'加油！💪', 20:'再接再厉！🌟', 30:'你太棒了！👍'};
+            var msg = null;
+            if (lockCorrect === 10) msg = msgs[10];
+            else if (lockCorrect === 20) msg = msgs[20];
+            else if (lockCorrect === 30) msg = msgs[30];
+            if (msg) {
+                var el = document.getElementById('milestoneMsg');
+                el.textContent = msg;
+                el.classList.remove('hidden');
+            }
         }
 
         function renderSteps() {
@@ -2004,6 +2058,7 @@
                 winStreak++;
                 loseStreak = 0;
                 score += 10 + winStreak * 2;
+                if (isManualLevel) { lockTotal++; lockCorrect++; }
 
                 ding('ok');
                 flyStar();
@@ -2043,6 +2098,7 @@
 
             } else {
                 loseStreak++;
+                if (isManualLevel) lockTotal++;
                 winStreak = 0;
 
                 ding('no');
@@ -2167,6 +2223,7 @@
 
         function skipProblem() {
             loseStreak++;
+            if (isManualLevel) lockTotal++;
             winStreak = 0;
             ding('no');
             renderProgress();
@@ -2231,6 +2288,9 @@
         function startGame() {
             pet = CAT; // 固定猫咪
             isManualLevel = false;
+            lockTotal = 0; lockCorrect = 0;
+            document.getElementById('lockStats').classList.add('hidden');
+            document.getElementById('milestoneMsg').classList.add('hidden');
 
             document.getElementById('startPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
@@ -2266,6 +2326,9 @@
             level = 1; score = 0; total = 0; correct = 0;
             winStreak = 0; loseStreak = 0;
             isManualLevel = false;
+            lockTotal = 0; lockCorrect = 0;
+            document.getElementById('lockStats').classList.add('hidden');
+            document.getElementById('milestoneMsg').classList.add('hidden');
 
             document.getElementById('winPage').style.display = 'none';
             document.getElementById('gameBody').classList.add('active');
@@ -2426,6 +2489,8 @@
                     if (isManualLevel && targetLevel === level) {
                         // 再点一次当前关 → 解锁
                         isManualLevel = false;
+                        document.getElementById('lockStats').classList.add('hidden');
+                        document.getElementById('milestoneMsg').classList.add('hidden');
                         renderTrack();
                         renderProgress();
                         updateLevelQuickHighlight();
@@ -2435,6 +2500,10 @@
                     // 选关并锁定
                     level = targetLevel;
                     isManualLevel = true;
+                    lockTotal = 0;
+                    lockCorrect = 0;
+                    document.getElementById('lockStats').classList.remove('hidden');
+                    document.getElementById('milestoneMsg').classList.add('hidden');
                     winStreak = 0;
                     loseStreak = 0;
                     renderTrack();
